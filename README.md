@@ -1,9 +1,18 @@
-# tps2021
-TPS for 2021
+# tps
+TPS forked
 
-Here are a few changes in the redesign; 
+Make sure you create an environment so that your local python environment stays safe. 
 
- * Updated Task handling: 
-    - Tasks can be edited, each version is stored as a new row. 
-    - The difficulty is set after the task is done. 
-    - The developers are notified of changes. 
+python3 -m venv env 
+
+The command above creates a new python environment, activate it by 
+
+source env/bin/activate
+
+Then install django and any other required library:
+
+pip install django
+
+
+
+
