@@ -120,10 +120,16 @@ def create_task(request):
             task.save()
             mastertask.team.developer_set
 
-            devs = Developer.objects.all().filter(team=t)
+
+            #devs = Developer.objects.all().filter(team=t)
+
+            #recievers = []
+            #for user in Users.objects.all():
+            #    recievers.append(user.email)
+                
         
             saveLog(mastertask, "Task is created by " + str(d) + ".")
-            send_mail('TPS:Notification || A task has been created',task.title+'\n'+task.description+ '\nPriortiy: '+str(task.PRIORITY[task.priority-1])+ '\nDue date is: ' +str(task.promised_date), 'ardakestane@hotmail.com',['ardakestane@hotmail.com'], fail_silently=False )
+            send_mail('TPS:Notification || A task has been created',"Creator: "+(Developer.__str__(d)) +"\nTitle: "+ task.title+'\n'+"Description: "+task.description+ '\nPriortiy: '+task.getPriority()+ '\nDue date is: ' +str(task.promised_date), 'ardakestane@hotmail.com',["ardakestane@hotmail.com"], fail_silently=False )
             return redirect('team_view')
         else:
             context={'page_title': 'Create New Task', 'form': form, 'milestone': milestone}
