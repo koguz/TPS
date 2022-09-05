@@ -1,3 +1,6 @@
+from doctest import master
+from re import T
+from tokenize import group
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash 
 from django.contrib.auth.models import Group, User
 from django.contrib.auth.forms import PasswordChangeForm
@@ -6,6 +9,8 @@ from django.http.response import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import send_mail
+
 
 from tasks.models import *
 from .forms import CommentForm, CourseForm, MasterCourseForm, MilestoneForm, TaskForm, TeamFormStd
@@ -110,11 +115,15 @@ def create_task(request):
             mastertask.owner = d
             mastertask.team = t
             mastertask.save() 
-
             task:Task = form.save(commit=False)
             task.masterTask = mastertask 
             task.save()
+            mastertask.team.developer_set
+
+            devs = Developer.objects.all().filter(team=t)
+        
             saveLog(mastertask, "Task is created by " + str(d) + ".")
+            send_mail('TPS:Notification || A task has been created',task.title+'\n'+task.description+ '\nPriortiy: '+str(task.PRIORITY[task.priority-1])+ '\nDue date is: ' +str(task.promised_date), 'ardakestane@hotmail.com',['ardakestane@hotmail.com'], fail_silently=False )
             return redirect('team_view')
         else:
             context={'page_title': 'Create New Task', 'form': form, 'milestone': milestone}
@@ -143,6 +152,7 @@ def complete_task(request, task_id):
         mt.difficulty = int(request.POST["difficulty"])
         mt.save()
         saveLog(mt, "Task is completed by " + str(d) + ".")
+        
         return redirect('view_task', task_id)
     else: 
         return redirect('team_view')

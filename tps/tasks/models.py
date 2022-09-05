@@ -3,7 +3,7 @@ from django.db.models.deletion import CASCADE, SET_NULL
 from django.db.models.fields.related import ForeignKey
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 def past_date_validator(value):
     import datetime 
