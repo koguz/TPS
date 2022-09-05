@@ -96,6 +96,7 @@ class Team(models.Model):
 class Developer(models.Model):
     user = models.OneToOneField(User, on_delete=CASCADE)
     team = models.ManyToManyField(Team, blank=True)
+
     # team = models.ForeignKey(Team, on_delete=SET_NULL, blank=True, null=True)
 
     def __str__(self):
