@@ -77,6 +77,7 @@ def edit_task(request, task_id):
     mt:MasterTask = get_object_or_404(MasterTask, pk=task_id)
     t:Task = Task.objects.all().filter(masterTask=mt).order_by('pk').reverse()[0]
     d:Developer = Developer.objects.get(user=request.user)
+    tm = d.team.all()[0]
     if mt.owner != d: # return to team view if the owner of the task is not this user
         return redirect('team_view')
     if mt.status != 1: # return to team view if the master task is not 1 (proposed)
@@ -89,7 +90,20 @@ def edit_task(request, task_id):
             task.masterTask = mt 
             task.version = task.version + 1 
             task.save()
+
+            devs = Developer.objects.all().filter(team=tm)
+
+            receivers = []
+
+            for developer in devs:
+                if developer != d:
+                    receivers.append(developer.user.email)
+
             saveLog(mt, "Task is edited by " + str(d) + ".")
+            send_mail('TPS:Notification || A task has been edited',"Editor: " + (Developer.__str__(d)) +
+            "\nTitle: " + task.title + '\n' + "Description: " + task.description + 
+            '\nPriortiy: ' + task.getPriority() + '\nDue date is: ' + str(task.promised_date), 
+            'ardakestane@hotmail.com',receivers, fail_silently = False)
             return redirect('view_task', task_id)
         else: 
             return redirect('team_view')
@@ -154,6 +168,7 @@ def complete_task(request, task_id):
     mt:MasterTask = get_object_or_404(MasterTask, pk=task_id)
     t:Task = Task.objects.all().filter(masterTask=mt).order_by('pk').reverse()[0]
     d:Developer = Developer.objects.get(user=request.user)
+    tm = d.team.all()[0]
     if mt.owner != d:
         return redirect('team_view')
     if request.method == 'POST':
@@ -162,6 +177,20 @@ def complete_task(request, task_id):
         mt.status = 3 
         mt.difficulty = int(request.POST["difficulty"])
         mt.save()
+
+        devs = Developer.objects.all().filter(team=tm)
+
+        receivers = []
+
+        for developer in devs:
+            if developer != d:
+                receivers.append(developer.user.email)
+
+        send_mail('TPS:Notification || A task has been completed',
+            "\nTitle: " + t.title + '\n' + "Description: " + t.description + 
+            '\nPriortiy: ' + t.getPriority() + '\nDue date is: ' + str(t.promised_date), 
+            'ardakestane@hotmail.com',receivers, fail_silently = False)
+
         saveLog(mt, "Task is completed by " + str(d) + ".")
         
         return redirect('view_task', task_id)
@@ -235,6 +264,7 @@ def view_task(request, task_id):
     t:Task = Task.objects.all().filter(masterTask=mt).order_by('pk').reverse()[0]
     d:Developer = Developer.objects.get(user=request.user)
     tm = d.team.all()[0]
+    devs = Developer.objects.all().filter(team=tm)
     if mt.team != tm:
         return redirect('team_view')
     if request.method == 'POST':
@@ -256,6 +286,18 @@ def view_task(request, task_id):
                     vote.status = mt.status
                     vote.vote = True 
                     vote.save()
+
+                    owner = []
+                    
+                    for developer in devs:
+                        if developer != d:
+                            owner.append(developer.user.email)
+
+                    send_mail('TPS:Notification || The task you created is received an approve vote.',
+                    'Your tasked  called ' + t.title + ' received an approve vote by '+ str(d) + '.\n' + 
+                    'Comment: ' + comment.body,
+                    'ardakestane@hotmail.com', owner, fail_silently = False)
+
                     saveLog(mt, "Task received an approve vote by "+ str(d) + ".")
                 elif request.POST['approve'] == "No":
                     comment.approved = False
@@ -277,10 +319,33 @@ def view_task(request, task_id):
     if mt.status == 1 and v_app > len(mt.team.developer_set.all())/2 :
         mt.status = 2
         mt.save()
+
+        owner = []
+                    
+        for developer in devs:
+            if developer != d:
+                owner.append(developer.user.email)
+
+        send_mail('TPS:Notification || The task you created is now in open state.',
+            "Your tasked called " + t.title + " is now at open state."
+            '\nTask\'s due date is: ' + str(t.promised_date), 
+            'ardakestane@hotmail.com',owner, fail_silently = False)
+            
         saveLog(mt, "All approved. Task is now in open state.")
     elif mt.status == 3 and v_app > len(mt.team.developer_set.all())/2 :
         mt.status = 5
         mt.save()
+
+        owner = []
+                    
+        for developer in devs:
+            if developer != d:
+                owner.append(developer.user.email)
+
+        send_mail('TPS:Notification || The task you created is now accepted.',
+            "Your tasked called " + t.title + " is accepted.",
+            'ardakestane@hotmail.com',owner, fail_silently = False)
+
         saveLog(mt, "All approved. Task is now accepted!")
     elif mt.status == 3 and v_den >= len(mt.team.developer_set.all())/2 :
         reopen = True 
