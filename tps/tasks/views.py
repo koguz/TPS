@@ -112,7 +112,7 @@ def edit_task(request, task_id):
 
             saveLog(mt, "Task is edited by " + str(d) + ".")
 
-            send_mail(subject, plain_message, from_email, ['umutk@windowslive.com'], html_message=html_message)
+            send_mail(subject, plain_message, from_email, receivers, html_message=html_message)
 
             return redirect('view_task', task_id)
         else: 
@@ -163,7 +163,7 @@ def create_task(request):
             plain_message = strip_tags(html_message)
             from_email = 'ardakestane@hotmail.com'
 
-            send_mail(subject, plain_message, from_email, ['umutk@windowslive.com'], html_message=html_message)
+            send_mail(subject, plain_message, from_email, receivers, html_message=html_message)
             saveLog(mastertask, "Task is created by " + str(d) + ".")
             return redirect('team_view')
         else:
@@ -218,7 +218,7 @@ def complete_task(request, task_id):
         plain_message = strip_tags(html_message)
         from_email = 'ardakestane@hotmail.com'
 
-        send_mail(subject, plain_message, from_email, ['umutk@windowslive.com'], html_message=html_message)
+        send_mail(subject, plain_message, from_email, receivers, html_message=html_message)
        
         saveLog(mt, "Task is completed by " + str(d) + ".")
         
@@ -294,6 +294,7 @@ def view_task(request, task_id):
     d:Developer = Developer.objects.get(user=request.user)
     tm = d.team.all()[0]
     devs = Developer.objects.all().filter(team=tm)
+    task_owner: Developer = mt.owner
     if mt.team != tm:
         return redirect('team_view')
     if request.method == 'POST':
@@ -315,13 +316,7 @@ def view_task(request, task_id):
                     vote.status = mt.status
                     vote.vote = True 
                     vote.save()
-
-                    owner = []
                     
-                    for developer in devs:
-                        if developer != d:
-                            owner.append(developer.user.email)
-
                     subject = 'TPS:Notification || The task you created is received an approve vote.'
 
                     html_message = render_to_string('tasks/email-templates/task-approve-vote.html',
@@ -330,7 +325,7 @@ def view_task(request, task_id):
                     plain_message = strip_tags(html_message)
                     from_email = 'ardakestane@hotmail.com'
 
-                    send_mail(subject, plain_message, from_email, ['umutk@windowslive.com'], html_message=html_message)
+                    send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
                     saveLog(mt, "Task received an approve vote by "+ str(d) + ".")
                 elif request.POST['approve'] == "No":
                     comment.approved = False
@@ -341,12 +336,6 @@ def view_task(request, task_id):
                     vote.vote = False 
                     vote.save()
 
-                    owner = []
-                    
-                    for developer in devs:
-                        if developer != d:
-                            owner.append(developer.user.email)
-
                     subject = 'TPS:Notification || The task you created is received a revision request.'
 
                     html_message = render_to_string('tasks/email-templates/task-revision-request.html',
@@ -355,7 +344,7 @@ def view_task(request, task_id):
                     plain_message = strip_tags(html_message)
                     from_email = 'ardakestane@hotmail.com'
 
-                    send_mail(subject, plain_message, from_email, ['umutk@windowslive.com'], html_message=html_message)
+                    send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
                     saveLog(mt, "Task received a revision request by "+ str(d) + ".")
             comment.save()
             return redirect('view_task', task_id)
@@ -368,13 +357,6 @@ def view_task(request, task_id):
     if mt.status == 1 and v_app > len(mt.team.developer_set.all())/2 :
         mt.status = 2
         mt.save()
-
-        owner = []
-                    
-        for developer in devs:
-            if developer != d:
-                owner.append(developer.user.email)
-
         
         subject = 'TPS:Notification || The task you created is now in open state.'
 
@@ -384,18 +366,12 @@ def view_task(request, task_id):
         plain_message = strip_tags(html_message)
         from_email = 'ardakestane@hotmail.com'
 
-        send_mail(subject, plain_message, from_email, ['umutk@windowslive.com'], html_message=html_message)
+        send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
             
         saveLog(mt, "All approved. Task is now in open state.")
     elif mt.status == 3 and v_app > len(mt.team.developer_set.all())/2 :
         mt.status = 5
         mt.save()
-
-        owner = []
-                    
-        for developer in devs:
-            if developer != d:
-                owner.append(developer.user.email)
 
         subject = 'TPS:Notification || The task you created is now accepted.'
 
@@ -405,7 +381,7 @@ def view_task(request, task_id):
         plain_message = strip_tags(html_message)
         from_email = 'ardakestane@hotmail.com'
 
-        send_mail(subject, plain_message, from_email, ['umutk@windowslive.com'], html_message=html_message)
+        send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
         saveLog(mt, "All approved. Task is now accepted!")
     elif mt.status == 3 and v_den >= len(mt.team.developer_set.all())/2 :
         reopen = True 
