@@ -10,6 +10,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 
 from tasks.models import *
@@ -144,10 +146,17 @@ def create_task(request):
 
             saveLog(mastertask, "Task is created by " + str(d) + ".")
 
-            send_mail('TPS:Notification || A task has been created',"Creator: " + (Developer.__str__(d)) +
-            "\nTitle: " + task.title + '\n' + "Description: " + task.description + 
-            '\nPriortiy: ' + task.getPriority() + '\nDue date is: ' + str(task.promised_date), 
-            'ardakestane@hotmail.com',receivers, fail_silently = False)
+            subject = 'TPS:Notification || A task has been created'
+
+            html_message = render_to_string('tasks/email-templates/task-completed.html',
+            {'owner':mastertask.owner,
+            'title':task.title,'description':task.description,'priority':task.getPriority(),'duedate':str(task.promised_date)})
+
+            plain_message = strip_tags(html_message)
+            from_email = 'ardakestane@hotmail.com'
+            to = 'ardakestane@hotmail.com'
+
+            send_mail(subject, plain_message, from_email, [to], html_message=html_message)
 
             return redirect('team_view')
         else:
