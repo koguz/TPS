@@ -104,8 +104,10 @@ def edit_task(request, task_id):
 
             subject = 'TPS:Notification || A task has been edited'
 
+            url = request._current_scheme_host + "/tasks/" + str(task.masterTask_id)
+
             html_message = render_to_string('tasks/email-templates/task-edited.html',
-            {'owner':mt.owner, 'title':task.title, 'description':task.description, 'priority':task.getPriority(), 'duedate':str(task.promised_date)})
+            {'owner':mt.owner, 'url':url,'title':task.title, 'description':task.description, 'priority':task.getPriority(), 'duedate':str(task.promised_date)})
 
             plain_message = strip_tags(html_message)
             from_email = 'ardakestane@hotmail.com'
@@ -156,8 +158,10 @@ def create_task(request):
 
             subject = 'TPS:Notification || A task has been created'
 
+            url = request._current_scheme_host + "/tasks/" + str(task.masterTask_id)
+
             html_message = render_to_string('tasks/email-templates/task-created.html',
-            {'owner':mastertask.owner,
+            {'owner':mastertask.owner, 'url': url,
             'title':task.title,'description':task.description,'priority':task.getPriority(),'duedate':str(task.promised_date)})
 
             plain_message = strip_tags(html_message)
@@ -212,8 +216,10 @@ def complete_task(request, task_id):
 
         subject = 'TPS:Notification || A task has been completed'
 
+        url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
+
         html_message = render_to_string('tasks/email-templates/task-completed.html',
-        {'owner':mt.owner,
+        {'owner':mt.owner, 'url':url,
         'title':t.title,'description':t.description,'priority':t.getPriority(),'difficulty': difficulty,'duedate':str(t.promised_date)})
         plain_message = strip_tags(html_message)
         from_email = 'ardakestane@hotmail.com'
@@ -318,9 +324,9 @@ def view_task(request, task_id):
                     vote.save()
                     
                     subject = 'TPS:Notification || The task you created is received an approve vote.'
-
+                    url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
                     html_message = render_to_string('tasks/email-templates/task-approve-vote.html',
-                    {'voter':d, 'title':t.title, 'comment': comment.body, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
+                    {'voter':d, 'url': url, 'title':t.title, 'comment': comment.body, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
 
                     plain_message = strip_tags(html_message)
                     from_email = 'ardakestane@hotmail.com'
@@ -337,9 +343,9 @@ def view_task(request, task_id):
                     vote.save()
 
                     subject = 'TPS:Notification || The task you created is received a revision request.'
-
+                    url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
                     html_message = render_to_string('tasks/email-templates/task-revision-request.html',
-                    {'voter':d, 'title':t.title, 'comment': comment.body, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
+                    {'voter':d, 'url':url, 'title':t.title, 'comment': comment.body, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
 
                     plain_message = strip_tags(html_message)
                     from_email = 'ardakestane@hotmail.com'
@@ -359,9 +365,10 @@ def view_task(request, task_id):
         mt.save()
         
         subject = 'TPS:Notification || The task you created is now in open state.'
+        url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
 
         html_message = render_to_string('tasks/email-templates/task-open-state.html',           
-         {'title':t.title, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
+         {'title':t.title, 'url':url, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
 
         plain_message = strip_tags(html_message)
         from_email = 'ardakestane@hotmail.com'
@@ -374,9 +381,10 @@ def view_task(request, task_id):
         mt.save()
 
         subject = 'TPS:Notification || The task you created is now accepted.'
+        url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
 
         html_message = render_to_string('tasks/email-templates/task-accepted.html',           
-         {'title':t.title, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
+         {'title':t.title, 'url':url, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
 
         plain_message = strip_tags(html_message)
         from_email = 'ardakestane@hotmail.com'
