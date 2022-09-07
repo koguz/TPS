@@ -1,3 +1,4 @@
+from difflib import diff_bytes
 from doctest import master
 from re import T
 from tokenize import group
@@ -101,11 +102,18 @@ def edit_task(request, task_id):
                 if developer != d:
                     receivers.append(developer.user.email)
 
+            subject = 'TPS:Notification || A task has been edited'
+
+            html_message = render_to_string('tasks/email-templates/task-edited.html',
+            {'owner':mt.owner, 'title':task.title, 'description':task.description, 'priority':task.getPriority(), 'duedate':str(task.promised_date)})
+
+            plain_message = strip_tags(html_message)
+            from_email = 'ardakestane@hotmail.com'
+
             saveLog(mt, "Task is edited by " + str(d) + ".")
-            send_mail('TPS:Notification || A task has been edited',"Editor: " + (Developer.__str__(d)) +
-            "\nTitle: " + task.title + '\n' + "Description: " + task.description + 
-            '\nPriortiy: ' + task.getPriority() + '\nDue date is: ' + str(task.promised_date), 
-            'ardakestane@hotmail.com',receivers, fail_silently = False)
+
+            send_mail(subject, plain_message, from_email, ['umutk@windowslive.com'], html_message=html_message)
+
             return redirect('view_task', task_id)
         else: 
             return redirect('team_view')
@@ -144,20 +152,19 @@ def create_task(request):
                 if developer != d:
                     receivers.append(developer.user.email)
 
-            saveLog(mastertask, "Task is created by " + str(d) + ".")
+            
 
             subject = 'TPS:Notification || A task has been created'
 
-            html_message = render_to_string('tasks/email-templates/task-completed.html',
+            html_message = render_to_string('tasks/email-templates/task-created.html',
             {'owner':mastertask.owner,
             'title':task.title,'description':task.description,'priority':task.getPriority(),'duedate':str(task.promised_date)})
 
             plain_message = strip_tags(html_message)
             from_email = 'ardakestane@hotmail.com'
-            to = 'ardakestane@hotmail.com'
 
-            send_mail(subject, plain_message, from_email, [to], html_message=html_message)
-
+            send_mail(subject, plain_message, from_email, ['umutk@windowslive.com'], html_message=html_message)
+            saveLog(mastertask, "Task is created by " + str(d) + ".")
             return redirect('team_view')
         else:
             context={'page_title': 'Create New Task', 'form': form, 'milestone': milestone}
@@ -187,6 +194,14 @@ def complete_task(request, task_id):
         mt.difficulty = int(request.POST["difficulty"])
         mt.save()
 
+        difficulty = str
+        if mt.difficulty == 1:
+            difficulty = 'Easy'
+        elif mt.difficulty == 2:
+            difficulty = 'Normal'
+        elif mt.difficulty == 3:
+            difficulty = 'Difficult'
+
         devs = Developer.objects.all().filter(team=tm)
 
         receivers = []
@@ -195,11 +210,16 @@ def complete_task(request, task_id):
             if developer != d:
                 receivers.append(developer.user.email)
 
-        send_mail('TPS:Notification || A task has been completed',
-            "\nTitle: " + t.title + '\n' + "Description: " + t.description + 
-            '\nPriortiy: ' + t.getPriority() + '\nDue date is: ' + str(t.promised_date), 
-            'ardakestane@hotmail.com',receivers, fail_silently = False)
+        subject = 'TPS:Notification || A task has been completed'
 
+        html_message = render_to_string('tasks/email-templates/task-completed.html',
+        {'owner':mt.owner,
+        'title':t.title,'description':t.description,'priority':t.getPriority(),'difficulty': difficulty,'duedate':str(t.promised_date)})
+        plain_message = strip_tags(html_message)
+        from_email = 'ardakestane@hotmail.com'
+
+        send_mail(subject, plain_message, from_email, ['umutk@windowslive.com'], html_message=html_message)
+       
         saveLog(mt, "Task is completed by " + str(d) + ".")
         
         return redirect('view_task', task_id)
@@ -302,11 +322,15 @@ def view_task(request, task_id):
                         if developer != d:
                             owner.append(developer.user.email)
 
-                    send_mail('TPS:Notification || The task you created is received an approve vote.',
-                    'Your tasked  called ' + t.title + ' received an approve vote by '+ str(d) + '.\n' + 
-                    'Comment: ' + comment.body,
-                    'ardakestane@hotmail.com', owner, fail_silently = False)
+                    subject = 'TPS:Notification || The task you created is received an approve vote.'
 
+                    html_message = render_to_string('tasks/email-templates/task-approve-vote.html',
+                    {'voter':d, 'title':t.title, 'comment': comment.body, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
+
+                    plain_message = strip_tags(html_message)
+                    from_email = 'ardakestane@hotmail.com'
+
+                    send_mail(subject, plain_message, from_email, ['umutk@windowslive.com'], html_message=html_message)
                     saveLog(mt, "Task received an approve vote by "+ str(d) + ".")
                 elif request.POST['approve'] == "No":
                     comment.approved = False
@@ -316,6 +340,22 @@ def view_task(request, task_id):
                     vote.status = mt.status 
                     vote.vote = False 
                     vote.save()
+
+                    owner = []
+                    
+                    for developer in devs:
+                        if developer != d:
+                            owner.append(developer.user.email)
+
+                    subject = 'TPS:Notification || The task you created is received a revision request.'
+
+                    html_message = render_to_string('tasks/email-templates/task-revision-request.html',
+                    {'voter':d, 'title':t.title, 'comment': comment.body, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
+
+                    plain_message = strip_tags(html_message)
+                    from_email = 'ardakestane@hotmail.com'
+
+                    send_mail(subject, plain_message, from_email, ['umutk@windowslive.com'], html_message=html_message)
                     saveLog(mt, "Task received a revision request by "+ str(d) + ".")
             comment.save()
             return redirect('view_task', task_id)
@@ -335,10 +375,16 @@ def view_task(request, task_id):
             if developer != d:
                 owner.append(developer.user.email)
 
-        send_mail('TPS:Notification || The task you created is now in open state.',
-            "Your tasked called " + t.title + " is now at open state."
-            '\nTask\'s due date is: ' + str(t.promised_date), 
-            'ardakestane@hotmail.com',owner, fail_silently = False)
+        
+        subject = 'TPS:Notification || The task you created is now in open state.'
+
+        html_message = render_to_string('tasks/email-templates/task-open-state.html',           
+         {'title':t.title, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
+
+        plain_message = strip_tags(html_message)
+        from_email = 'ardakestane@hotmail.com'
+
+        send_mail(subject, plain_message, from_email, ['umutk@windowslive.com'], html_message=html_message)
             
         saveLog(mt, "All approved. Task is now in open state.")
     elif mt.status == 3 and v_app > len(mt.team.developer_set.all())/2 :
@@ -351,10 +397,15 @@ def view_task(request, task_id):
             if developer != d:
                 owner.append(developer.user.email)
 
-        send_mail('TPS:Notification || The task you created is now accepted.',
-            "Your tasked called " + t.title + " is accepted.",
-            'ardakestane@hotmail.com',owner, fail_silently = False)
+        subject = 'TPS:Notification || The task you created is now accepted.'
 
+        html_message = render_to_string('tasks/email-templates/task-accepted.html',           
+         {'title':t.title, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
+
+        plain_message = strip_tags(html_message)
+        from_email = 'ardakestane@hotmail.com'
+
+        send_mail(subject, plain_message, from_email, ['umutk@windowslive.com'], html_message=html_message)
         saveLog(mt, "All approved. Task is now accepted!")
     elif mt.status == 3 and v_den >= len(mt.team.developer_set.all())/2 :
         reopen = True 
