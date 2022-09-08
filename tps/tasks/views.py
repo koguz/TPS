@@ -110,7 +110,7 @@ def edit_task(request, task_id):
             {'owner':mt.owner, 'url':url,'title':task.title, 'description':task.description, 'priority':task.getPriority(), 'duedate':str(task.promised_date)})
 
             plain_message = strip_tags(html_message)
-            from_email = 'ardakestane@hotmail.com'
+            from_email = 'no-reply@tps.info.tr'
 
             saveLog(mt, "Task is edited by " + str(d) + ".")
 
@@ -165,7 +165,7 @@ def create_task(request):
             'title':task.title,'description':task.description,'priority':task.getPriority(),'duedate':str(task.promised_date)})
 
             plain_message = strip_tags(html_message)
-            from_email = 'ardakestane@hotmail.com'
+            from_email = 'no-reply@tps.info.tr'
 
             send_mail(subject, plain_message, from_email, receivers, html_message=html_message)
             saveLog(mastertask, "Task is created by " + str(d) + ".")
@@ -222,7 +222,7 @@ def complete_task(request, task_id):
         {'owner':mt.owner, 'url':url,
         'title':t.title,'description':t.description,'priority':t.getPriority(),'difficulty': difficulty,'duedate':str(t.promised_date)})
         plain_message = strip_tags(html_message)
-        from_email = 'ardakestane@hotmail.com'
+        from_email = 'no-reply@tps.info.tr'
 
         send_mail(subject, plain_message, from_email, receivers, html_message=html_message)
        
@@ -329,7 +329,7 @@ def view_task(request, task_id):
                     {'voter':d, 'url': url, 'title':t.title, 'comment': comment.body, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
 
                     plain_message = strip_tags(html_message)
-                    from_email = 'ardakestane@hotmail.com'
+                    from_email = 'no-reply@tps.info.tr'
 
                     send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
                     saveLog(mt, "Task received an approve vote by "+ str(d) + ".")
@@ -348,7 +348,7 @@ def view_task(request, task_id):
                     {'voter':d, 'url':url, 'title':t.title, 'comment': comment.body, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
 
                     plain_message = strip_tags(html_message)
-                    from_email = 'ardakestane@hotmail.com'
+                    from_email = 'no-reply@tps.info.tr'
 
                     send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
                     saveLog(mt, "Task received a revision request by "+ str(d) + ".")
@@ -371,7 +371,7 @@ def view_task(request, task_id):
          {'title':t.title, 'url':url, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
 
         plain_message = strip_tags(html_message)
-        from_email = 'ardakestane@hotmail.com'
+        from_email = 'no-reply@tps.info.tr'
 
         send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
             
@@ -387,7 +387,7 @@ def view_task(request, task_id):
          {'title':t.title, 'url':url, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
 
         plain_message = strip_tags(html_message)
-        from_email = 'ardakestane@hotmail.com'
+        from_email = 'no-reply@tps.info.tr'
 
         send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
         saveLog(mt, "All approved. Task is now accepted!")

@@ -41,11 +41,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
-NOTIFICATION_SYSTEM_TARGETS={
-  "email": {
-      'from_email': 'naumesoftware@gmail.com' 
-  }
-}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -133,9 +128,9 @@ STATIC_URL = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-EMAIL_HOST = 'smtp-mail.outlook.com'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'ardakestane@hotmail.com'
-EMAIL_HOST_PASSWORD = 'tGqUQp77Gvx!?6f'
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
+EMAIL_HOST = 'rd-merlin.panel-giris.com'
+EMAIL_PORT = 465
+EMAIL_HOST_USER = 'no-reply@tps.info.tr'
+EMAIL_HOST_PASSWORD = 'fGPhcCy&OS)w?;Gp'
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
