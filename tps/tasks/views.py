@@ -62,6 +62,7 @@ def update_view(request):
 def team_view(request):
     d:Developer = Developer.objects.get(user=request.user)
     t:Team = d.team.all()[0]
+    teams:Team([]) = d.team.all()
     devs = Developer.objects.all().filter(team=t)
     # TODO 
     milestone = t.course.get_current_milestone() # Milestone.objects.all().filter(course=t.course).order_by('due')[0]
@@ -71,9 +72,11 @@ def team_view(request):
         'tasks': mt,
         'team': t,
         'devs': devs,
-        'milestone': milestone
+        'milestone': milestone,
+        'teams': teams
     }
     return render(request, 'tasks/index.html', context)
+
 
 @login_required
 def edit_task(request, task_id):
@@ -132,6 +135,7 @@ def edit_task(request, task_id):
 def create_task(request):
     d = Developer.objects.get(user=request.user)
     t:Team = d.team.all()[0]
+    teams: Team([]) = d.team.all()
     milestone = t.course.get_current_milestone() #Milestone.objects.all().filter(course=t.course).order_by('due')[0]
     if request.method == 'POST':
         form = TaskForm(request.POST)
