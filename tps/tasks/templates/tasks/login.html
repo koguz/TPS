@@ -12,51 +12,12 @@
     border-top-left-radius: 0;
     border-top-right-radius: 0;
   }
-  .column {
-  float: left;
-  width: 50%;
-  
-}
-
-/* Clear floats after the columns */
-.row:after {
-  content: "";
-  display: table;
-  clear: both;
-}
-
-.button{
-    color: white;
-    margin-bottom: 10px;
-    width: 100px; 
-    height: 40px; 
-    margin-left: auto; 
-    margin-right: 12px; 
-    background-color:#ff6600;
-    border: none;
-    transition-duration: 0s;
-    border-radius: 10px;
-}
-.button:hover {
-  background-color: #df5b03;
-  color: white;
-}
-
 </style>
 
 {% endblock %} {% block menubar %} {% endblock %} {% block main_content %}
 
-<form action="{% url 'login' %}" method="post">
-    {% csrf_token %}
-    <div class="form row">
-    <div class="column">
-        <h3 style="padding-bottom: 20px">TPS Login</h3>
-    </div>
-    <button class="button" type="submit"
-    >SIGN UP</button>
-    </div>
-</form>
-
+<div class="form">
+  <h3 style="padding-bottom: 20px">TPS Login</h3>
   <form action="{% url 'login' %}" method="post">
     {% csrf_token %}
     <div class="form-floating">

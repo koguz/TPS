@@ -52,8 +52,54 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         {% block menubar %}
+
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav ms-auto mb-2 mb-sm-0">
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                id="dropdown03"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                CE223
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="dropdown03">
+                <li
+                  ><a class="dropdown-item" href="{% url 'change_password' %}"
+                    ><i></i> CE216</a
+                  ></li
+                >
+                <li
+                  ><a class="dropdown-item" href="{% url 'view_updates' %}"
+                    ><i></i> MATH250</a
+                  ></li
+                >
+                <li
+                  ><a
+                    class="dropdown-item"
+                    href="https://docs.google.com/document/d/e/2PACX-1vQGd-e63O3NKBAXof_Av5ogkue_dOxdhXxgYG53GzP2qHbBYVXBVR3CwOG3gSOA4CODAWNaSbsx3-ui/pub"
+                    ><i></i> MATH236</a
+                  ></li
+                >
+                <li
+                  ><a class="dropdown-item" href="{% url 'logout' %}"
+                    ><i></i> SE116</a
+                  ></li
+                >
+              </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="dropdown04" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-list-check"></i> TPS</a>
+                    <ul class="dropdown-menu" aria-labelledby="dropdown04">
+                      <li><a class="dropdown-item" href="#"><i class="bi bi-info-circle"></i> Help</a></li>
+                      <li><a class="dropdown-item" href="logout/"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                    </ul>
+                  </li>-->
+          </ul>
+
+          <ul class="navbar-nav ms-5 mb-2 mb-sm-0">
             <li class="nav-item dropdown">
               <a
                 class="nav-link dropdown-toggle"
@@ -89,14 +135,15 @@
               </ul>
             </li>
             <!--<li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="#" id="dropdown04" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-list-check"></i> TPS</a>
-                  <ul class="dropdown-menu" aria-labelledby="dropdown04">
-                    <li><a class="dropdown-item" href="#"><i class="bi bi-info-circle"></i> Help</a></li>
-                    <li><a class="dropdown-item" href="logout/"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-                  </ul>
-                </li>-->
+                    <a class="nav-link dropdown-toggle" href="#" id="dropdown04" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-list-check"></i> TPS</a>
+                    <ul class="dropdown-menu" aria-labelledby="dropdown04">
+                      <li><a class="dropdown-item" href="#"><i class="bi bi-info-circle"></i> Help</a></li>
+                      <li><a class="dropdown-item" href="logout/"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                    </ul>
+                  </li>-->
           </ul>
         </div>
+
         {% endblock %}
       </div>
     </nav>
