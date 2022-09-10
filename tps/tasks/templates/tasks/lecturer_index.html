@@ -1,5 +1,5 @@
-{% extends "tasks/base.html" %} {% load static %} {% block left_content %} {%
-include "tasks/lecturer_menu.html" %} {% endblock %} {% block main_content %}
+{% extends "tasks/base.html" %} {% load static %} {% block left_content %} 
+{%include "tasks/lecturer_menu.html" %} {% endblock %} {% block main_content %}
 
 <h4>Hello {{ user_display_name }}!</h4>
 <p>Todo list</p>
@@ -9,22 +9,4 @@ include "tasks/lecturer_menu.html" %} {% endblock %} {% block main_content %}
   <li>Let the team to change team properties</li>
 </ul>
 
-{% endblock%} {% block left_content %}
-
-<div>
-  <div class="text" style="margin-top: 25px">Edit Profile</div>
-</div>
-<div class="custom-border">
-  <img
-    src="https://cdn0.iconfinder.com/data/icons/social-media-network-4/48/male_avatar-512.png"
-    id="output"
-    width="80px"
-  />
-  <div></div>
-  <div></div>
-  <div
-    ><button class="btn btn-primary custom-button" ype="submit">Update </button>
-  </div>
-</div>
-
-{% endblock %}
+{% endblock%} 
