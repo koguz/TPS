@@ -1,9 +1,17 @@
-{% extends "tasks/base.html" %}
-{% load static %}
+{% extends "tasks/base.html" %} {% load static %} {% block left_content %}
 
 
-{% block left_content %}
-<h4>{{ team }}</h4>
+
+
+<div class="custom-select" style="width: 200px;">
+    <select>
+        {% for t in teams %}            
+        <option style=""> 
+            <a class="dropdown-item" style="" href="{{t.pk}}"> {{t.course.masterCourse.code }} {{t}}</a> 
+        </option> 
+        {% endfor %}
+    </select>
+</div>
 <p><i class="bi bi-github"></i> <a href="{{ team.github }}">Visit Team Git Repository</a></p>
 <p><i class="bi bi-pencil-square"></i> <a href="{% url "edit_team" %}">Edit Team Information</a></p>
 <hr>
