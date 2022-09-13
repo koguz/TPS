@@ -1,8 +1,12 @@
 {% extends "tasks/profile.html" %} {% load static %} {% block main_content %}
+
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css'>
+
 <style>
   .column {
     float: left;
-    width: 50%;
+    width: 30%;
+    margin-top: 30px;
   }
 
   /* Clear floats after the columns */
@@ -11,33 +15,247 @@
     display: table;
     clear: both;
   }
-  .text {
-    font-style: normal;
-    font-weight: 600;
-    font-size: 18px;
-    line-height: 22px;
-    text-align: start;
-    margin-bottom: 20px;
-    margin-left: 10px;
-    color: #656565;
+  .line {
+    margin-bottom: 15px;
+    margin-left: 40px;
+    font-weight: 300;
   }
+  .courseBuilder {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-right: 25px;
+    padding-left: 25px;
+    display: inline-block;
+    border-width: 3px;
+    border-style: solid;
+    border-color: #ef7200;
+    border-radius: 25px;
+    margin-left: 55px;
+    background-color: #F9F9F9;
+  }
+
+
+
+
+  .wrapper .icon{
+  position: relative;
+  background-color: #fcfffd;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  font-size: 15px;
+  display: inline-block;
+  align-items:center;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  color: #333;
+  text-decoration: none;
+}
+.wrapper .tooltip {
+  position: absolute;
+  top: 0;
+  line-height: 1.5;
+  font-size: 14px;
+  background-color: #ffffff;
+  color: #ffffff;
+  padding: 5px 8px;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.wrapper .tooltip::before {
+  position: absolute;
+  content: "";
+  height: 8px;
+  width: 8px;
+  background-color: #ffffff;
+  bottom: -3px;
+  left: 50%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.wrapper .icon:hover .tooltip {
+  top: -40px;
+  left: 50%;
+    transform: translateX(-50%);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.wrapper .icon:hover span,
+.wrapper .icon:hover .tooltip {
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
+}
+.wrapper .facebook:hover,
+.wrapper .facebook:hover .tooltip,
+.wrapper .facebook:hover .tooltip::before {
+  background-color: #3b5999;
+  color: #ffffff;
+}
+.wrapper .twitter:hover,
+.wrapper .twitter:hover .tooltip,
+.wrapper .twitter:hover .tooltip::before {
+  background-color: #46c1f6;
+  color: #ffffff;
+}
+.wrapper .instagram:hover,
+.wrapper .instagram:hover .tooltip,
+.wrapper .instagram:hover .tooltip::before {
+  background-color: #e1306c;
+  color: #ffffff;
+}
+.wrapper .github:hover,
+.wrapper .github:hover .tooltip,
+.wrapper .github:hover .tooltip::before {
+  background-color: #333333;
+  color: #ffffff;
+}
+.wrapper .youtube:hover,
+.wrapper .youtube:hover .tooltip,
+.wrapper .youtube:hover .tooltip::before {
+  background-color: #de463b;
+  color: #ffffff;
+}
+  
 </style>
 
-<div style="margin-top: 10px">
-  <div class="row">
-    <div class="column">
-      <p class="text">First Name: {{ user.get_short_name }}</p>
-    </div>
-    <div class="column">
-      <p class="text">Last Name: {{ user.get_full_name }}</p>
-    </div>
-  </div>
+
+<div>
   <div>
-    <p class="text">School ID:</p>
-  </div>
-  <div>
-    <p class="text">Email:{{ user.email }}</p>
+    <h4>INFORMATION </h4><hr />
+    <div class="row">
+      <div class="column line">Name: Umut</div>
+      <div class="column line">Surname: KARAKUYU</div>
+      <div class="line">ID: 20200602029</div>
+      <div class="line">Year: Junior</div>
+      <div class="line">E-mail: umutk@windowslive.com</div>
+      <div class="line">Phone Number: 0546 123 45 67</div>
+      <div class="line" style="margin-bottom: 50px"
+        >Languages: JAVA, PYTHON, FLUTTER, REACT NATIVE, HTML, CSS, JAVASCRIPT,
+        BOOTSTRAP, TAILWIND</div
+      >
+    </div></div
+  >
+  <div
+    ><h4>MANAGE YOUR RESUME </h4><hr />
+
+    <div class="line" style="margin-bottom: 0px; margin-left: 20px"
+      >You can upload a resume for your colleagues and other people to get to
+      know you in more detail.</div
+    >
+    <div style="display: block; flex-direction: row; position: relative">
+      <button
+        class="btn btn-primary column line"
+        style="
+          background-color: transparent;
+          border-width: 3px;
+          border-color: #3385C0;
+          border-radius: 20px;
+          color: #3385C0 ;
+          margin-left: 35px;
+          height: 40px;
+          width: 150px;
+          font-size: 13px;
+          font-weight: bolder;
+        "
+        type="submit"
+        >UPLOAD RESUME</button
+      >
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+
+      <div class="line" style="margin-bottom: 30px">Active Courses:</div>
+      <div class="courseBuilder">CE223</div>
+      <div class="courseBuilder">CE221</div>
+      <div class="courseBuilder">SE116</div>
+      <div class="line" style="margin-bottom: 30px; margin-top: 30px"
+        >Previous Courses:</div
+      >
+      <div class="courseBuilder" style="border-color: #00ba02">SE115</div>
+      <div class="courseBuilder" style="border-color: #00ba02">SE311</div>
+    </div>
   </div>
 </div>
 
-{%endblock%}
+{%endblock %}
+
+
+
+
+
+{% block right_content %}
+<style>
+  
+</style>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<div style="float:right">
+  <div class="wrapper">
+
+    
+    
+    <a href="https://www.facebook.com/" class="icon facebook"style="display: table-cell; vertical-align: middle; text-align: center; ">
+      <div class="tooltip">Facebook</div>
+      <span><i class="fab fa-facebook-f"></i></span>
+    </a>
+    <a href="https://www.twitter.com" class="icon twitter"style="display: table-cell; vertical-align: middle; text-align: center; ">
+      <div class="tooltip">Twitter</div>
+      <span><i class="fab fa-twitter"></i></span>
+    </a>
+    <a href="https://www.instagram.com" class="icon instagram"style="display: table-cell; vertical-align: middle; text-align: center; ">
+      <div class="tooltip">Instagram</div>
+      <span><i class="fab fa-instagram"></i></span>
+    </a>
+    <a href="https://www.github.com" class="icon github" style="display: table-cell; vertical-align: middle; text-align: center; ">
+      <div class="tooltip">Github</div>
+      <span><i class="fab fa-github"></i></span>
+    </a>
+    <a href="https://www.youtube.com" class="icon youtube"style="display: table-cell; vertical-align: middle; text-align: center; ">
+      <div class="tooltip">Youtube</div>
+      <span><i class="fab fa-youtube"></i></span>
+    </a>
+  </div>
+  </div>
+</div>
+{%endblock %}
