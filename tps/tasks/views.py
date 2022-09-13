@@ -462,6 +462,15 @@ def tpslogout(request):
     return redirect('index')
 
 @login_required
+def profile (request):
+    return render(request, 'tasks/profile.html', {'page_title': 'Profile' })
+
+
+@login_required
+def my_details (request):
+    return render(request, 'tasks/my_details.html', {'page_title': 'My Details' })
+
+@login_required
 def change_password(request):
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, data=request.POST)
@@ -483,7 +492,21 @@ def change_password(request):
             ) 
     else:
         form = PasswordChangeForm(request.user)
-        return render(request, 'tasks/password.html', {'page_title': 'Change Password', 'form': form })
+        return render(request, 'tasks/change_password.html', {'page_title': 'Change Password', 'form': form })
+
+@login_required
+def my_teams (request):
+    return render(request, 'tasks/my_teams.html', {'page_title': 'My Details' })
+
+@login_required
+def my_email (request):
+ 
+        return render(request, 'tasks/my_email.html', {'page_title': 'Change Password'})
+
+
+@login_required
+def my_notifications (request):
+    return render(request, 'tasks/my_notifications.html', {'page_title': 'My Details' })
 
 @login_required
 @permission_required('tasks.add_mastercourse')

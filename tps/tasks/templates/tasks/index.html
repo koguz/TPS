@@ -3,11 +3,11 @@
 
 
 
-<div class="custom-select" style="width: 200px;">
-    <select>
+<div style="width: 200px; margin-bottom: 20px; margin-top: 10px;">
+    <select style="border-radius: 12px; ">
         {% for t in teams %}            
-        <option style=""> 
-            <a class="dropdown-item" style="" href="{{t.pk}}"> {{t.course.masterCourse.code }} {{t}}</a> 
+        <option> 
+            <a class="dropdown-item" href="{{t.pk}}"> {{t.course.masterCourse.code }} / {{t}}</a> 
         </option> 
         {% endfor %}
     </select>

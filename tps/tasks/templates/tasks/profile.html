@@ -1,0 +1,60 @@
+{% extends "tasks/base.html" %} {% load static %} {% block breadcrumbs %}
+
+<h1 class="text" style="font-weight: 400; font-size: 30px; margin-top: 10px"
+  >Settings</h1
+>
+
+{% endblock %} {% block left_content %}
+<style>
+  .menus {
+    margin-bottom: 20px;
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  a:link {
+    color: black;
+  }
+
+  /* visited link */
+  a:visited {
+    color: black;
+  }
+
+  /* mouse over link */
+  a:hover {
+    color: orange;
+  }
+
+  /* selected link */
+  a:active {
+    color: black;
+  }
+</style>
+<div>
+  <img
+    src="https://cdn0.iconfinder.com/data/icons/social-media-network-4/48/male_avatar-512.png"
+    id="output"
+    width="100px"
+  />
+  <hr />
+  <div style="margin-bottom: 10px">
+    <a class="menus" href="{% url 'my_details' %}">My Details</a>
+  </div>
+  <div style="margin-bottom: 10px">
+    <a class="menus" href="{% url 'change_password' %}">Password</a>
+  </div>
+  <div style="margin-bottom: 10px">
+    <a class="menus" href="{% url 'teams' %}">Teams</a>
+  </div>
+  <div style="margin-bottom: 10px">
+    <a class="menus" href="{% url 'email' %}">Email</a>
+  </div>
+  <div style="margin-bottom: 10px">
+    <a class="menus" href="{% url 'notifications' %}">Notifications</a>
+  </div>
+
+  <p> </p>
+</div>
+
+{% endblock %}

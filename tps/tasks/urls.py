@@ -23,5 +23,10 @@ urlpatterns = [
     path('tasks/<int:task_id>/liked/<int:liked>/', views.like_task, name='like_task'),
     path('accounts/login/', views.tpslogin, name='login'),
     path('accounts/logout/', views.tpslogout, name='logout'),
-    path('accounts/change-password/', views.change_password, name='change_password')
+    path('accounts/profile/', views.profile, name='profile'),
+    path('accounts/profile/my-details', views.my_details, name='my_details'),
+    path('accounts/profile/change-password', views.change_password, name='change_password'),
+    path('accounts/profile/teams', views.my_teams, name='teams'),
+    path('accounts/profile/email', views.my_email, name='email'),
+    path('accounts/profile/notifications', views.my_notifications, name='notifications')
 ]

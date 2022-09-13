@@ -1,0 +1,55 @@
+{% extends "tasks/profile.html" %} {% load static %} {% block main_content %}
+<style>
+    .column {
+      float: left;
+      width: 50%;
+    }
+  
+    /* Clear floats after the columns */
+    .row:after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+    .text {
+      font-style: normal;
+      font-weight: 600;
+      font-size: 18px;
+      line-height: 22px;
+      text-align: start;
+      margin-bottom: 20px;
+      margin-left: 10px;
+      color: #656565;
+    }
+  </style>
+  
+  <div style="margin-top: 10px">
+    <div class="row">
+      <div class="column">
+        <p class="text">Prefered Email:</p>
+      </div>
+      <div>
+        <form
+    class="custom-border"
+
+    method="post"
+  >
+    {% csrf_token %}
+    <table class="row">
+      {{ form }}
+      <button
+          class="btn btn-primary column"
+          style="
+            background-color: #ee6402;
+            float: right;
+            border-color: transparent;
+            width: 200px;
+          "
+          type="submit"
+          >Change Password</button
+        
+      >
+    </table>
+  </form>
+      </div>
+ {%endblock%} </h4></h4>

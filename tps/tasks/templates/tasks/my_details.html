@@ -1,0 +1,43 @@
+{% extends "tasks/profile.html" %} {% load static %} {% block main_content %}
+<style>
+  .column {
+    float: left;
+    width: 50%;
+  }
+
+  /* Clear floats after the columns */
+  .row:after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+  .text {
+    font-style: normal;
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 22px;
+    text-align: start;
+    margin-bottom: 20px;
+    margin-left: 10px;
+    color: #656565;
+  }
+</style>
+
+<div style="margin-top: 10px">
+  <div class="row">
+    <div class="column">
+      <p class="text">First Name: {{ user.get_short_name }}</p>
+    </div>
+    <div class="column">
+      <p class="text">Last Name: {{ user.get_full_name }}</p>
+    </div>
+  </div>
+  <div>
+    <p class="text">School ID:</p>
+  </div>
+  <div>
+    <p class="text">Email:{{ user.email }}</p>
+  </div>
+</div>
+
+{%endblock%}
