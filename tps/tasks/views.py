@@ -105,19 +105,24 @@ def edit_task(request, task_id):
                 if developer != d:
                     receivers.append(developer.user.email)
 
-            subject = 'TPS:Notification || A task has been edited'
-
+            subject = 'TPS:Notification || A task has been edited!'
+            contentList = [
+                'Edited by: ' + str(mt.owner), 
+                'Title: ' + task.title,
+                'Description: ' + task.description,
+                'Priortiy: ' + task.getPriority(),
+                'Due date: '+ str(task.promised_date)
+            ]
             url = request._current_scheme_host + "/tasks/" + str(task.masterTask_id)
 
-            html_message = render_to_string('tasks/email-templates/task-edited.html',
-            {'owner':mt.owner, 'url':url,'title':task.title, 'description':task.description, 'priority':task.getPriority(), 'duedate':str(task.promised_date)})
+            html_message = render_to_string('tasks/email_template.html',
+            {'title':'A task has been edited.', 'contentList': contentList, 'url':url, 'background_color': '#003399'})
 
             plain_message = strip_tags(html_message)
             from_email = 'no-reply@tps.info.tr'
 
-            saveLog(mt, "Task is edited by " + str(d) + ".")
-
             send_mail(subject, plain_message, from_email, receivers, html_message=html_message)
+            saveLog(mt, "Task is edited by " + str(d) + ".")
 
             return redirect('view_task', task_id)
         else: 
@@ -158,15 +163,20 @@ def create_task(request):
                 if developer != d:
                     receivers.append(developer.user.email)
 
-            
+            contentList = [
+                'Creator: ' + str(mastertask.owner),
+                'Title: ' + task.title,
+                'Description: ' + task.description,
+                'Priority: ' + task.getPriority(),
+                'Due date: ' + str(task.promised_date)
+            ]
 
             subject = 'TPS:Notification || A task has been created'
 
             url = request._current_scheme_host + "/tasks/" + str(task.masterTask_id)
 
-            html_message = render_to_string('tasks/email-templates/task-created.html',
-            {'owner':mastertask.owner, 'url': url,
-            'title':task.title,'description':task.description,'priority':task.getPriority(),'duedate':str(task.promised_date)})
+            html_message = render_to_string('tasks/email_template.html',
+            {'title':'A task has been created!', 'contentList':contentList, 'url': url, 'background_color': '#003399'})
 
             plain_message = strip_tags(html_message)
             from_email = 'no-reply@tps.info.tr'
@@ -217,19 +227,27 @@ def complete_task(request, task_id):
         for developer in devs:
             if developer != d:
                 receivers.append(developer.user.email)
-
+ 
         subject = 'TPS:Notification || A task has been completed'
+
+        contentList = [
+            'Creator: ' + str(mt.owner), 
+            'Title: ' + t.title,
+            'Description: ' + t.description,
+            'Priortiy: ' + t.getPriority(),
+            'Difficulty: ' + difficulty,
+            'Due date: '+ str(t.promised_date)
+        ]
 
         url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
 
-        html_message = render_to_string('tasks/email-templates/task-completed.html',
-        {'owner':mt.owner, 'url':url,
-        'title':t.title,'description':t.description,'priority':t.getPriority(),'difficulty': difficulty,'duedate':str(t.promised_date)})
+        html_message = render_to_string('tasks/email_template.html',
+        {'title':'A task has been completed!', 'contentList': contentList, 'url':url, 'background_color': '#003399'})
+
         plain_message = strip_tags(html_message)
         from_email = 'no-reply@tps.info.tr'
 
-        send_mail(subject, plain_message, from_email, receivers, html_message=html_message)
-       
+        send_mail(subject, plain_message, from_email, receivers, html_message=html_message)       
         saveLog(mt, "Task is completed by " + str(d) + ".")
         
         return redirect('view_task', task_id)
@@ -327,10 +345,18 @@ def view_task(request, task_id):
                     vote.vote = True 
                     vote.save()
                     
-                    subject = 'TPS:Notification || The task you created is received an approve vote.'
+                    subject = 'TPS:Notification || The task you created has received an approve vote.'
+                    contentList = [
+                        'Your task called ' + t.title + ' has received an aprove vote.',
+                        'Approver: ' + str(d),
+                        str(d) + '\'s comment: ' + comment.body,
+                        'Priority: ' + t.getPriority(),
+                        'Due date: ' + str(t.promised_date)
+                    ]
+
                     url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
-                    html_message = render_to_string('tasks/email-templates/task-approve-vote.html',
-                    {'voter':d, 'url': url, 'title':t.title, 'comment': comment.body, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
+                    html_message = render_to_string('tasks/email_template.html',
+                    {'title': 'A task has received an approve vote!', 'contentList': contentList, 'url': url, 'background_color': '#5cb85c'})
 
                     plain_message = strip_tags(html_message)
                     from_email = 'no-reply@tps.info.tr'
@@ -346,10 +372,17 @@ def view_task(request, task_id):
                     vote.vote = False 
                     vote.save()
 
-                    subject = 'TPS:Notification || The task you created is received a revision request.'
+                    subject = 'TPS:Notification || The task you created has received a revision request.'
+                    contentList = [
+                        'Your task called ' + t.title + ' has received a revision request.',
+                        'Requested by: ' + str(d),
+                        str(d) + '\'s comment: ' + comment.body,
+                        'Priority: ' + t.getPriority(),
+                        'Due date: ' + str(t.promised_date)
+                    ]
                     url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
-                    html_message = render_to_string('tasks/email-templates/task-revision-request.html',
-                    {'voter':d, 'url':url, 'title':t.title, 'comment': comment.body, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
+                    html_message = render_to_string('tasks/email_template.html',
+                    {'title':'A task has received a revision request.', 'contentList': contentList, 'url':url, 'background_color': '#ff2400'})
 
                     plain_message = strip_tags(html_message)
                     from_email = 'no-reply@tps.info.tr'
@@ -369,16 +402,23 @@ def view_task(request, task_id):
         mt.save()
         
         subject = 'TPS:Notification || The task you created is now in open state.'
+
+        contentList = [
+            'Your task called ' + t.title + ' is now in open state.',
+            'Description: ' + t.description,
+            'Priority: ' + t.getPriority(),
+            'Due date: ' + str(t.promised_date)
+        ]
+        
         url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
 
-        html_message = render_to_string('tasks/email-templates/task-open-state.html',           
-         {'title':t.title, 'url':url, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
+        html_message = render_to_string('tasks/email_template.html',           
+         {'title':'Your task is now in open state!','contentList': contentList, 'url':url, 'background_color': '#003399'})
 
         plain_message = strip_tags(html_message)
         from_email = 'no-reply@tps.info.tr'
 
         send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
-            
         saveLog(mt, "All approved. Task is now in open state.")
     elif mt.status == 3 and v_app > len(mt.team.developer_set.all())/2 :
         mt.status = 5
@@ -387,8 +427,8 @@ def view_task(request, task_id):
         subject = 'TPS:Notification || The task you created is now accepted.'
         url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
 
-        html_message = render_to_string('tasks/email-templates/task-accepted.html',           
-         {'title':t.title, 'url':url, 'description':t.description, 'priority':t.getPriority(), 'duedate':str(t.promised_date)})
+        html_message = render_to_string('tasks/email_template.html',           
+         {'title':'Your task is accepted!', 'contentList': ['Your task called ' + t.title + ' is now accepted.'],'url':url, 'background_color': '#003399' })
 
         plain_message = strip_tags(html_message)
         from_email = 'no-reply@tps.info.tr'
