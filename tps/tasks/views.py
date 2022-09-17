@@ -64,6 +64,7 @@ def team_view(request):
     t:Team = d.team.all()[0]
     teams:Team([]) = d.team.all()
     devs = Developer.objects.all().filter(team=t)
+    d.user.email = d.user.first_name + '.' + d.user.last_name + '@std.ieu.edu.tr'
     # TODO 
     milestone = t.course.get_current_milestone() # Milestone.objects.all().filter(course=t.course).order_by('due')[0]
     mt = MasterTask.objects.all().filter(team=t).order_by('pk').reverse()[:10]
