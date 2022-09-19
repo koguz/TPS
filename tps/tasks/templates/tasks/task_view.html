@@ -43,7 +43,7 @@
         {% if mastertask.status == 1 and mytask %}
             <hr>
             <div class="alert alert-info">
-            You can <a href="{% url 'edit_task' team.pk mastertask.pk %}"><button class="btn btn-primary"><i class="bi bi-pencil-square"></i> Edit</button></a> your own tasks 
+            You can <a href="{% url 'edit_task' mastertask.pk %}"><button class="btn btn-primary"><i class="bi bi-pencil-square"></i> Edit</button></a> your own tasks 
             in the <b>{{ mastertask.getStatus }}</b> state. 
             </div>
         {% endif %}
@@ -181,7 +181,7 @@
 
 {% block main_right_content %}
 <h4>Comments</h4>
-<form action="{% url 'view_task' team.pk mastertask.pk %}" method='post'>
+<form action="{% url 'view_task' mastertask.pk %}" method='post'>
 {% csrf_token %}
 <table width="100%">
 {{ form }}
