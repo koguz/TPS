@@ -12,7 +12,7 @@
 
 <h4>Create New Task</h4>
 
-<form action="{% url 'create_task' %}" method="post">
+<form action="{% url 'create_task' team.pk %}" method="post">
 {% csrf_token %}
 <table>
     {{ form }}

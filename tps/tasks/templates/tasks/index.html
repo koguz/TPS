@@ -1,21 +1,19 @@
 {% extends "tasks/base.html" %} {% load static %} {% block left_content %}
 
-
-
-
 <div style="width: 200px; margin-bottom: 20px; margin-top: 10px;">
-    <select style="border-radius: 12px; ">
+    <select style="border-radius: 12px;" onchange="window.location.href=this.value">
         {% for t in teams %}            
-        <option> 
-            <a class="dropdown-item" href="{{t.pk}}"> {{t.course.masterCourse.code }} / {{t}}</a> 
+        <option value="{% url 'team_view' t.pk %}"> 
+            {{t.course.masterCourse.code }} / {{t}}
         </option> 
         {% endfor %}
     </select>
 </div>
 <p><i class="bi bi-github"></i> <a href="{{ team.github }}">Visit Team Git Repository</a></p>
-<p><i class="bi bi-pencil-square"></i> <a href="{% url "edit_team" %}">Edit Team Information</a></p>
+<p><i class="bi bi-pencil-square"></i> <a href="{% url "edit_team" team.pk %}">Edit Team Information</a></p>
 <hr>
 <h5>Team Points</h5>
+
 <p>
 {% for key, value in team.get_milestone_list.items %}
 {{ key }}: {{ value }} Points<br />
@@ -45,7 +43,7 @@
         <h4>Tasks</h4>
     </div>
     <div class="col-sm" style="text-align: right;">
-        <a href="{% url 'create_task' %}"><button class="btn btn-primary">Create Task</button></a>
+        <a href="{% url 'create_task' team.pk %}"><button class="btn btn-primary">Create Task</button></a>
     </div>
 </div>
 <hr>
@@ -63,7 +61,7 @@
         {% for mtask in tasks %}
             <tr>
                 <td>{{mtask.owner}}</td>
-                <td><a href="{% url 'view_task' mtask.pk %}">{{mtask}}</a></td>
+                <td><a href="{% url 'view_task' team.pk mtask.pk %}">{{mtask}}</a></td>
                 <td>{{mtask.milestone}}</td>
                 <td class="{% if mtask.status == 1 %}table-warning {% elif mtask.status == 2 %}table-primary{% elif mtask.status == 3 %}table-info{% elif mtask.states == 4 %}table-danger{% elif mtask.status == 5 %}table-success{%endif%}">{{mtask.getStatus}}</td>
             </tr>

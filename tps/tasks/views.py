@@ -6,7 +6,6 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.models import Group, User
 from django.contrib.auth.forms import PasswordChangeForm
 from django.http.response import HttpResponse
-# from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import ObjectDoesNotExist
@@ -47,7 +46,7 @@ def index(request):
     # redirect to another page for lecturer! 
     try:
         d:Developer = Developer.objects.get(user=request.user)
-        return redirect('team_view')
+        return redirect('team_view', 1)
     except ObjectDoesNotExist:
         try: 
             l:Lecturer = Lecturer.objects.get(user=request.user)
@@ -59,10 +58,10 @@ def update_view(request):
     return render(request, 'tasks/updates.html')
 
 @login_required 
-def team_view(request):
+def team_view(request, team_id):
     d:Developer = Developer.objects.get(user=request.user)
-    t:Team = d.team.all()[0]
     teams:Team([]) = d.team.all()
+    t = Team.objects.get(pk=team_id)
     devs = Developer.objects.all().filter(team=t)
     d.user.email = d.user.first_name + '.' + d.user.last_name + '@std.ieu.edu.tr'
     # TODO 
@@ -80,15 +79,15 @@ def team_view(request):
 
 
 @login_required
-def edit_task(request, task_id):
+def edit_task(request, team_id, task_id):
     mt:MasterTask = get_object_or_404(MasterTask, pk=task_id)
     t:Task = Task.objects.all().filter(masterTask=mt).order_by('pk').reverse()[0]
     d:Developer = Developer.objects.get(user=request.user)
-    tm = d.team.all()[0]
+    tm = Team.objects.get(pk=team_id)
     if mt.owner != d: # return to team view if the owner of the task is not this user
-        return redirect('team_view')
+        return redirect('team_view', team_id)
     if mt.status != 1: # return to team view if the master task is not 1 (proposed)
-        return redirect('team_view')
+        return redirect('team_view', team_id)
     if request.method == 'POST':
         form = TaskForm(request.POST)
         if form.is_valid():
@@ -114,7 +113,7 @@ def edit_task(request, task_id):
                 'Priortiy: ' + task.getPriority(),
                 'Due date: '+ str(task.promised_date)
             ]
-            url = request._current_scheme_host + "/tasks/" + str(task.masterTask_id)
+            url = request._current_scheme_host + "/tasks/" + str(team_id) + str(task.masterTask_id)
 
             html_message = render_to_string('tasks/email_template.html',
             {'title':'A task has been edited.', 'contentList': contentList, 'url':url, 'background_color': '#003399'})
@@ -125,23 +124,23 @@ def edit_task(request, task_id):
             send_mail(subject, plain_message, from_email, receivers, html_message=html_message)
             saveLog(mt, "Task is edited by " + str(d) + ".")
 
-            return redirect('view_task', task_id)
+            return redirect('view_task',team_id, task_id)
         else: 
-            return redirect('team_view')
+            return redirect('team_view', team_id)
     else:
         form = TaskForm(instance=t)
         context = {
             'page_title': 'Edit task',
             'form': form, 
-            'mastertask': mt
+            'mastertask': mt,
+            'team': tm
         }
         return render(request, "tasks/task_edit.html", context)
 
 @login_required
-def create_task(request):
+def create_task(request, team_id):
     d = Developer.objects.get(user=request.user)
-    t:Team = d.team.all()[0]
-    teams: Team([]) = d.team.all()
+    t:Team = Team.objects.get(pk=team_id)
     milestone = t.course.get_current_milestone() #Milestone.objects.all().filter(course=t.course).order_by('due')[0]
     if request.method == 'POST':
         form = TaskForm(request.POST)
@@ -184,7 +183,7 @@ def create_task(request):
 
             send_mail(subject, plain_message, from_email, receivers, html_message=html_message)
             saveLog(mastertask, "Task is created by " + str(d) + ".")
-            return redirect('team_view')
+            return redirect('team_view', team_id)
         else:
             context={'page_title': 'Create New Task', 'form': form, 'milestone': milestone}
             return render(request, "tasks/task_create.html", context)
@@ -194,18 +193,19 @@ def create_task(request):
         context = {
             'page_title': 'Create New Task',
             'form': form, 
-            'milestone': milestone
+            'milestone': milestone,
+            'team': t
         } 
         return render(request, "tasks/task_create.html", context)
 
 @login_required 
-def complete_task(request, task_id):
+def complete_task(request, team_id, task_id):
     mt:MasterTask = get_object_or_404(MasterTask, pk=task_id)
     t:Task = Task.objects.all().filter(masterTask=mt).order_by('pk').reverse()[0]
     d:Developer = Developer.objects.get(user=request.user)
-    tm = d.team.all()[0]
+    tm = Team.objects.get(pk=team_id)
     if mt.owner != d:
-        return redirect('team_view')
+        return redirect('team_view', team_id)
     if request.method == 'POST':
         mt:MasterTask = get_object_or_404(MasterTask, pk=task_id)
         t:Task = Task.objects.all().filter(masterTask=mt).order_by('pk').reverse()[0]
@@ -251,14 +251,18 @@ def complete_task(request, task_id):
         send_mail(subject, plain_message, from_email, receivers, html_message=html_message)       
         saveLog(mt, "Task is completed by " + str(d) + ".")
         
-        return redirect('view_task', task_id)
+        context = {
+            'team': tm
+        }
+        
+        return redirect('view_task', team_id, task_id)
     else: 
-        return redirect('team_view')
+        return redirect('team_view', team_id)
 
 @login_required 
-def edit_team(request):
+def edit_team(request, team_id):
     d:Developer = Developer.objects.get(user=request.user)
-    t:Team = d.team.all()[0]
+    t:Team = Team.objects.get(pk=team_id)
     print(t.name, t.github)
     if request.method == 'POST':
         form = TeamFormStd(request.POST)
@@ -268,22 +272,23 @@ def edit_team(request):
             tnew.supervisor = t.supervisor 
             tnew.course = t.course
             tnew.save()
-            return redirect('team_view')
+            return redirect('team_view', team_id)
     else:
         form = TeamFormStd(instance=t)
         context = {
             'page_title': 'Edit Team Information',
-            'form': form
+            'form': form,
+            'team': t
         }
         return render(request, "tasks/team_edit_std.html", context)
 
 
 @login_required 
-def like_task(request, task_id, liked):
+def like_task(request, team_id, task_id, liked):
     mt:MasterTask = get_object_or_404(MasterTask, pk=task_id)
     d:Developer = Developer.objects.get(user=request.user)
     if mt.owner == d:
-        return redirect('team_view')
+        return redirect('team_view', team_id)
     try:
         # if like object exists, toggle like
         like = Like.objects.get(owner=d, mastertask=mt)
@@ -312,20 +317,20 @@ def like_task(request, task_id, liked):
             like.liked = False 
             saveLog(mt, "Task disliked by "+ str(d) + ".", True)
         like.save() 
-    return redirect('view_task', task_id)
+    return redirect('view_task', team_id, task_id)
 
 
 
 @login_required 
-def view_task(request, task_id):
+def view_task(request, team_id, task_id):
     mt:MasterTask = get_object_or_404(MasterTask, pk=task_id)
     t:Task = Task.objects.all().filter(masterTask=mt).order_by('pk').reverse()[0]
     d:Developer = Developer.objects.get(user=request.user)
-    tm = d.team.all()[0]
+    tm = Team.objects.get(pk=team_id)
     devs = Developer.objects.all().filter(team=tm)
     task_owner: Developer = mt.owner
     if mt.team != tm:
-        return redirect('team_view')
+        return redirect('team_view', team_id)
     if request.method == 'POST':
         form = CommentForm(request.POST)
         if form.is_valid():
@@ -391,7 +396,7 @@ def view_task(request, task_id):
                     send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
                     saveLog(mt, "Task received a revision request by "+ str(d) + ".")
             comment.save()
-            return redirect('view_task', task_id)
+            return redirect('view_task',team_id, task_id)
     form = CommentForm()
     comments = Comment.objects.all().filter(mastertask=mt).order_by('date').reverse()
     voted = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(owner=d))
