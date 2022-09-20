@@ -2,10 +2,16 @@
 
 <div style="width: 200px; margin-bottom: 20px; margin-top: 10px;">
     <select style="border-radius: 12px;" onchange="window.location.href=this.value">
-        {% for t in teams %}            
-        <option value="{% url 'team_view' t.pk %}"> 
-            {{t.course.masterCourse.code }} / {{t}}
-        </option> 
+        {% for t in teams %}
+        {% if t.pk == team.pk%}            
+            <option selected value="{% url 'team_view' t.pk %}"> 
+                {{t.course.masterCourse.code }} / {{t}}
+            </option> 
+        {% else %}
+            <option value="{% url 'team_view' t.pk %}"> 
+                {{t.course.masterCourse.code }} / {{t}}
+            </option> 
+        {% endif %} 
         {% endfor %}
     </select>
 </div>
