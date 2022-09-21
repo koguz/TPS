@@ -123,17 +123,17 @@ class Developer(models.Model):
     
     # we have to get the milestone names and points
     # for those milestones in a dictionary, so that i can loop through it in the template...
-    def get_milestone_list(self):
+    def get_milestone_list(self, team_id):
         milestone_list = {}
-        t = self.team.all()[0]
+        t = Team.objects.get(pk=team_id)
         for m in t.course.milestone_set.all():
             milestone_list[m.name] = self.get_developer_grade(m)
         return milestone_list
 
-    def get_project_grade(self):
+    def get_project_grade(self, team_id):
         team_grade = 0
         ind_grade = 0
-        t = self.team.all()[0]
+        t = Team.objects.get(pk=team_id)
         c = t.course 
         for m in c.milestone_set.all():
             team_grade = team_grade + t.get_team_points(m) * (m.weight / 100)

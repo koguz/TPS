@@ -75,7 +75,9 @@ def team_view(request, team_id):
             'team': t,
             'devs': devs,
             'milestone': milestone,
-            'teams': teams
+            'teams': teams,
+            'project_grade': d.get_project_grade(t.pk),
+            'milestone_lists': d.get_milestone_list(t.pk)
         }
         return render(request, 'tasks/index.html', context)
     else : 

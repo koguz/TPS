@@ -32,8 +32,8 @@
 {% for dev in devs %}
     <li>{{ dev }}
         <ul>
-        <li>Overall Project: {{ dev.get_project_grade }} Points</li>
-        {% for k, v in dev.get_milestone_list.items %}
+        <li>Overall Project: {{ project_grade }} Points</li>
+        {% for k, v in milestone_lists.items %}
             <li>{{ k }}: {{ v }} Points</li>
         {% endfor %}
         </ul>
