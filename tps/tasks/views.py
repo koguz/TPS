@@ -335,147 +335,153 @@ def view_task(request, task_id):
     mt:MasterTask = get_object_or_404(MasterTask, pk=task_id)
     t:Task = Task.objects.all().filter(masterTask=mt).order_by('pk').reverse()[0]
     d:Developer = Developer.objects.get(user=request.user)
-    tm = mt.team
-    devs = Developer.objects.all().filter(team=tm)
-    task_owner: Developer = mt.owner
-    if mt.team != tm:
-        return redirect('team_view', tm.pk)
-    if request.method == 'POST':
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment:Comment = form.save(commit=False)
-            comment.owner = request.user
-            comment.mastertask = mt 
-            comment.task = t 
-            if mt.owner == d and mt.status == 3 and request.POST['approve'] == "Update":
-                Vote.objects.all().filter(task=t).filter(status=mt.status).delete() 
-                saveLog(mt, "Task is updated by"+ str(d) + ".")
-            if len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(owner=d)) == 0:
-                if request.POST['approve'] == "Yes":
-                    comment.approved = True 
-                    vote = Vote()
-                    vote.owner = d
-                    vote.task = t 
-                    vote.status = mt.status
-                    vote.vote = True 
-                    vote.save()
-                    
-                    subject = 'TPS:Notification || The task you created has received an approve vote.'
-                    contentList = [
-                        'Your task called ' + t.title + ' has received an aprove vote.',
-                        'Approver: ' + str(d),
-                        str(d) + '\'s comment: ' + comment.body,
-                        'Priority: ' + t.getPriority(),
-                        'Due date: ' + str(t.promised_date)
-                    ]
 
-                    url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
-                    html_message = render_to_string('tasks/email_template.html',
-                    {'title': 'A task has received an approve vote!', 'contentList': contentList, 'url': url, 'background_color': '#5cb85c'})
+    if mt.team in d.team.all():    
+        d:Developer = Developer.objects.get(user=request.user)
+        tm = mt.team
+        devs = Developer.objects.all().filter(team=tm)
+        task_owner: Developer = mt.owner
+        if mt.team != tm:
+            return redirect('team_view', tm.pk)
+        if request.method == 'POST':
+            form = CommentForm(request.POST)
+            if form.is_valid():
+                comment:Comment = form.save(commit=False)
+                comment.owner = request.user
+                comment.mastertask = mt 
+                comment.task = t 
+                if mt.owner == d and mt.status == 3 and request.POST['approve'] == "Update":
+                    Vote.objects.all().filter(task=t).filter(status=mt.status).delete() 
+                    saveLog(mt, "Task is updated by"+ str(d) + ".")
+                if len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(owner=d)) == 0:
+                    if request.POST['approve'] == "Yes":
+                        comment.approved = True 
+                        vote = Vote()
+                        vote.owner = d
+                        vote.task = t 
+                        vote.status = mt.status
+                        vote.vote = True 
+                        vote.save()
+                        
+                        subject = 'TPS:Notification || The task you created has received an approve vote.'
+                        contentList = [
+                            'Your task called ' + t.title + ' has received an aprove vote.',
+                            'Approver: ' + str(d),
+                            str(d) + '\'s comment: ' + comment.body,
+                            'Priority: ' + t.getPriority(),
+                            'Due date: ' + str(t.promised_date)
+                        ]
 
-                    plain_message = strip_tags(html_message)
-                    from_email = 'no-reply@tps.info.tr'
+                        url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
+                        html_message = render_to_string('tasks/email_template.html',
+                        {'title': 'A task has received an approve vote!', 'contentList': contentList, 'url': url, 'background_color': '#5cb85c'})
 
-                    send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
-                    saveLog(mt, "Task received an approve vote by "+ str(d) + ".")
-                elif request.POST['approve'] == "No":
-                    comment.approved = False
-                    vote = Vote()
-                    vote.owner = d
-                    vote.task = t 
-                    vote.status = mt.status 
-                    vote.vote = False 
-                    vote.save()
+                        plain_message = strip_tags(html_message)
+                        from_email = 'no-reply@tps.info.tr'
 
-                    subject = 'TPS:Notification || The task you created has received a revision request.'
-                    contentList = [
-                        'Your task called ' + t.title + ' has received a revision request.',
-                        'Requested by: ' + str(d),
-                        str(d) + '\'s comment: ' + comment.body,
-                        'Priority: ' + t.getPriority(),
-                        'Due date: ' + str(t.promised_date)
-                    ]
-                    url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
-                    html_message = render_to_string('tasks/email_template.html',
-                    {'title':'A task has received a revision request.', 'contentList': contentList, 'url':url, 'background_color': '#ff2400'})
+                        send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
+                        saveLog(mt, "Task received an approve vote by "+ str(d) + ".")
+                    elif request.POST['approve'] == "No":
+                        comment.approved = False
+                        vote = Vote()
+                        vote.owner = d
+                        vote.task = t 
+                        vote.status = mt.status 
+                        vote.vote = False 
+                        vote.save()
 
-                    plain_message = strip_tags(html_message)
-                    from_email = 'no-reply@tps.info.tr'
+                        subject = 'TPS:Notification || The task you created has received a revision request.'
+                        contentList = [
+                            'Your task called ' + t.title + ' has received a revision request.',
+                            'Requested by: ' + str(d),
+                            str(d) + '\'s comment: ' + comment.body,
+                            'Priority: ' + t.getPriority(),
+                            'Due date: ' + str(t.promised_date)
+                        ]
+                        url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
+                        html_message = render_to_string('tasks/email_template.html',
+                        {'title':'A task has received a revision request.', 'contentList': contentList, 'url':url, 'background_color': '#ff2400'})
 
-                    send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
-                    saveLog(mt, "Task received a revision request by "+ str(d) + ".")
-            comment.save()
-            return redirect('view_task', task_id)
-    form = CommentForm()
-    comments = Comment.objects.all().filter(mastertask=mt).order_by('date').reverse()
-    voted = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(owner=d))
-    v_app = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(vote=True))
-    v_den = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(vote=False))
-    reopen = False 
-    if mt.status == 1 and v_app > len(mt.team.developer_set.all())/2 :
-        mt.status = 2
-        mt.save()
-        
-        subject = 'TPS:Notification || The task you created is now in open state.'
+                        plain_message = strip_tags(html_message)
+                        from_email = 'no-reply@tps.info.tr'
 
-        contentList = [
-            'Your task called ' + t.title + ' is now in open state.',
-            'Description: ' + t.description,
-            'Priority: ' + t.getPriority(),
-            'Due date: ' + str(t.promised_date)
-        ]
-        
-        url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
+                        send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
+                        saveLog(mt, "Task received a revision request by "+ str(d) + ".")
+                comment.save()
+                return redirect('view_task', task_id)
+    
+        form = CommentForm()
+        comments = Comment.objects.all().filter(mastertask=mt).order_by('date').reverse()
+        voted = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(owner=d))
+        v_app = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(vote=True))
+        v_den = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(vote=False))
+        reopen = False 
+        if mt.status == 1 and v_app > len(mt.team.developer_set.all())/2 :
+            mt.status = 2
+            mt.save()
+            
+            subject = 'TPS:Notification || The task you created is now in open state.'
 
-        html_message = render_to_string('tasks/email_template.html',           
-         {'title':'Your task is now in open state!','contentList': contentList, 'url':url, 'background_color': '#003399'})
+            contentList = [
+                'Your task called ' + t.title + ' is now in open state.',
+                'Description: ' + t.description,
+                'Priority: ' + t.getPriority(),
+                'Due date: ' + str(t.promised_date)
+            ]
+            
+            url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
 
-        plain_message = strip_tags(html_message)
-        from_email = 'no-reply@tps.info.tr'
+            html_message = render_to_string('tasks/email_template.html',           
+            {'title':'Your task is now in open state!','contentList': contentList, 'url':url, 'background_color': '#003399'})
 
-        send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
-        saveLog(mt, "All approved. Task is now in open state.")
-    elif mt.status == 3 and v_app > len(mt.team.developer_set.all())/2 :
-        mt.status = 5
-        mt.save()
+            plain_message = strip_tags(html_message)
+            from_email = 'no-reply@tps.info.tr'
 
-        subject = 'TPS:Notification || The task you created is now accepted.'
-        url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
+            send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
+            saveLog(mt, "All approved. Task is now in open state.")
+        elif mt.status == 3 and v_app > len(mt.team.developer_set.all())/2 :
+            mt.status = 5
+            mt.save()
 
-        html_message = render_to_string('tasks/email_template.html',           
-         {'title':'Your task is accepted!', 'contentList': ['Your task called ' + t.title + ' is now accepted.'],'url':url, 'background_color': '#003399' })
+            subject = 'TPS:Notification || The task you created is now accepted.'
+            url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
 
-        plain_message = strip_tags(html_message)
-        from_email = 'no-reply@tps.info.tr'
+            html_message = render_to_string('tasks/email_template.html',           
+            {'title':'Your task is accepted!', 'contentList': ['Your task called ' + t.title + ' is now accepted.'],'url':url, 'background_color': '#003399' })
 
-        send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
-        saveLog(mt, "All approved. Task is now accepted!")
-    elif mt.status == 3 and v_den >= len(mt.team.developer_set.all())/2 :
-        reopen = True 
-        
-    try:
-        liked = Like.objects.get(owner = d, mastertask = mt).liked
-    except ObjectDoesNotExist:
-        liked = None 
+            plain_message = strip_tags(html_message)
+            from_email = 'no-reply@tps.info.tr'
 
-    logs = MasterTaskLog.objects.all().filter(mastertask=mt).filter(gizli=False).order_by('tarih').reverse()
+            send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
+            saveLog(mt, "All approved. Task is now accepted!")
+        elif mt.status == 3 and v_den >= len(mt.team.developer_set.all())/2 :
+            reopen = True 
+            
+        try:
+            liked = Like.objects.get(owner = d, mastertask = mt).liked
+        except ObjectDoesNotExist:
+            liked = None 
 
-    context = {
-        'page_title': 'View Task',
-        'mastertask': mt,
-        'task': t, 
-        'tp': mt.difficulty * t.priority,
-        'form': form,
-        'voted': voted,
-        'mytask': mt.owner == d,
-        'v_app': v_app,
-        'v_den': v_den,
-        'reopen': reopen, 
-        'liked': liked, 
-        'comments': comments,
-        'logs' : logs
-    }
-    return render(request, "tasks/task_view.html", context)
+        logs = MasterTaskLog.objects.all().filter(mastertask=mt).filter(gizli=False).order_by('tarih').reverse()
+
+        context = {
+            'page_title': 'View Task',
+            'mastertask': mt,
+            'task': t, 
+            'tp': mt.difficulty * t.priority,
+            'form': form,
+            'voted': voted,
+            'mytask': mt.owner == d,
+            'v_app': v_app,
+            'v_den': v_den,
+            'reopen': reopen, 
+            'liked': liked, 
+            'comments': comments,
+            'logs' : logs
+        }
+        return render(request, "tasks/task_view.html", context)
+    else : 
+        return redirect('team_view', d.team.all()[0].pk)
 
 
 @login_required
