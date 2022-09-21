@@ -63,13 +63,7 @@ def team_view(request, team_id):
     teams:Team([]) = d.team.all()
     t = Team.objects.get(pk=team_id)
     
-    check = False
-    for team in teams : 
-        if team_id is team.pk : 
-            check = True
-            break
-    
-    if check :
+    if t in teams :
         devs = Developer.objects.all().filter(team=t)
         d.user.email = d.user.first_name + '.' + d.user.last_name + '@std.ieu.edu.tr'
         # TODO 
@@ -336,10 +330,8 @@ def view_task(request, task_id):
     t:Task = Task.objects.all().filter(masterTask=mt).order_by('pk').reverse()[0]
     d:Developer = Developer.objects.get(user=request.user)
 
-    if mt.team in d.team.all():    
-        d:Developer = Developer.objects.get(user=request.user)
+    if mt.team in d.team.all():
         tm = mt.team
-        devs = Developer.objects.all().filter(team=tm)
         task_owner: Developer = mt.owner
         if mt.team != tm:
             return redirect('team_view', tm.pk)
