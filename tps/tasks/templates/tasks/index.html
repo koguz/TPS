@@ -1,4 +1,15 @@
-{% extends "tasks/base.html" %} {% load static %} {% block left_content %}
+{% extends "tasks/base.html" %} {% load static %} {% block alert %} 
+    {% if not user.email%}
+        <div class="alert alert-danger" role="alert">
+            <p>You haven't entered an email for your account.
+                Please enter an email by clicking
+                <a href="{% url 'email'%}">here</a>
+            </p>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block left_content %}
 
 <div style="width: 200px; margin-bottom: 20px; margin-top: 10px;">
     <select style="border-radius: 12px;" onchange="window.location.href=this.value">
