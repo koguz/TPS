@@ -29,34 +29,20 @@
         <p class="text">Prefered Email:</p>
       </div>
       <div>
-        <form
-    class="custom-border"
-
-    method="post"
-  >
-    {% csrf_token %}
-    <table class="row">
-      {{ form }}
-      <button
-          class="btn btn-primary column"
-          style="
-            background-color: #ee6402;
-            float: right;
-            border-color: transparent;
-            width: 200px;
-          "
-          type="submit"
-          >Change Password</button
-        
-      >
-    </table>
-  </form>
-      </div>
+        <form method="post">
+          {% csrf_token %}
+          <p>Please enter your new Email</p>
+          <input name="email_input" type="email" value="{{user.email}}"></input>
+          <button>Save</button>
+    </form>
+      </div> 
+    </div> 
+  </div>
 
 
   <script>
     window.onload = function(){
-      document.getElementById('email').className = 'selected'
+      document.getElementById('email_option').className = 'selected'
     }
   </script>
  {%endblock%} </h4></h4>

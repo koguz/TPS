@@ -15,7 +15,7 @@ from django.utils.html import strip_tags
 
 
 from tasks.models import *
-from .forms import CommentForm, CourseForm, MasterCourseForm, MilestoneForm, TaskForm, TeamFormStd
+from .forms import CommentForm, CourseForm, EmailChangingForm, MasterCourseForm, MilestoneForm, TaskForm, TeamFormStd
 
 
 # Create your views here.
@@ -518,7 +518,7 @@ def tpslogout(request):
 
 @login_required
 def profile (request):
-    return render(request, 'tasks/profile.html', {'page_title': 'Profile' })
+    return render(request, 'tasks/profile.html', {'page_title': 'Profile'})
 
 
 @login_required
@@ -555,8 +555,12 @@ def my_teams (request):
 
 @login_required
 def my_email (request):
- 
-        return render(request, 'tasks/my_email.html', {'page_title': 'Change Password'})
+    if request.method == 'POST':
+        user = User.objects.all().filter(id=request.user.id)
+        user.email = str(request.POST.get('email_input'))
+        return render(request, 'tasks/my_email.html', { 'user': user })
+    else:
+        return render(request, 'tasks/my_email.html')
 
 
 @login_required
