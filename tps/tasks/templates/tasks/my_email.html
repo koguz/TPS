@@ -29,12 +29,15 @@
         <p class="text">Prefered Email:</p>
       </div>
       <div>
-        <form method="post">
+        <form action="{% url 'email' %}" method="post">
           {% csrf_token %}
-          <p>Please enter your new Email</p>
-          <input name="email_input" type="email" value="{{user.email}}"></input>
-          <button>Save</button>
-    </form>
+          <table width="100%">
+              {{ form }}
+          <tr>
+              <td>&nbsp;</td>
+              <td><input type="submit" value="Save" class="btn btn-primary"></td></tr>
+          </table>
+          </form>
       </div> 
     </div> 
   </div>
