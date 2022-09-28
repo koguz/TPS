@@ -15,7 +15,7 @@ from django.utils.html import strip_tags
 
 
 from tasks.models import *
-from .forms import CommentForm, CourseForm, EmailChangingForm, MasterCourseForm, MilestoneForm, TaskForm, TeamFormStd
+
 
 
 # Create your views here.
