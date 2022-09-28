@@ -26,16 +26,14 @@
   <div style="margin-top: 10px">
     <div class="row">
       <div class="column">
-        <p class="text">Prefered Email:</p>
-      </div>
-      <div>
-        <form method="post">
+        <form id="myform" method="post">
           {% csrf_token %}
           <p>Please enter your new Email</p>
           <input name="email_input" type="email" value="{{user.email}}"></input>
           <button>Save</button>
-    </form>
+        </form>
       </div> 
+      <input class="column" type="submit" form="myform" value="Update"/>
     </div> 
   </div>
 
