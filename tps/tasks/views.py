@@ -15,7 +15,7 @@ from django.utils.html import strip_tags
 
 
 from tasks.models import *
-
+from .forms import CommentForm, CourseForm, MasterCourseForm, MilestoneForm, TaskForm, TeamFormStd, EmailChangeForm
 
 
 # Create your views here.
@@ -552,15 +552,24 @@ def change_password(request):
 @login_required
 def my_teams (request):
     return render(request, 'tasks/my_teams.html', {'page_title': 'My Details' })
-
+ 
 @login_required
 def my_email (request):
+    u = request.user
     if request.method == 'POST':
-        user = User.objects.all().filter(id=request.user.id)
-        user.email = str(request.POST.get('email_input'))
-        return render(request, 'tasks/my_email.html', { 'user': user })
+        form = EmailChangeForm(request.POST)
+        if form.is_valid():
+            unew = form.save(commit=False)
+            unew.pk = u.pk
+            unew.first_name = u.first_name
+            unew.last_name = u.last_name
+            unew.username = u.username
+            unew.password = u.password
+            unew.save()
+            return render(request, 'tasks/my_email.html', { 'user': u, 'form': form })
     else:
-        return render(request, 'tasks/my_email.html')
+        form = EmailChangeForm(instance = u)
+        return render(request, 'tasks/my_email.html', {'user': u, 'form': form})
 
 
 @login_required
