@@ -14,15 +14,19 @@
 <div style="width: 200px; margin-bottom: 20px; margin-top: 10px;">
     <select style="border-radius: 12px;" onchange="window.location.href=this.value">
         {% for t in teams %}
-        {% if t.pk == team.pk%}            
-            <option selected value="{% url 'team_view' t.pk %}"> 
-                {{t.course.masterCourse.code }} / {{t}}
-            </option> 
-        {% else %}
-            <option value="{% url 'team_view' t.pk %}"> 
-                {{t.course.masterCourse.code }} / {{t}}
-            </option> 
-        {% endif %} 
+            {% if t.pk == team.pk and t.course.get_current_milestone is not None %}            
+                <option selected value="{% url 'team_view' t.pk %}"> 
+                    {{t.course.masterCourse.code }} / {{t}}
+                </option> 
+            {% elif t.course.get_current_milestone is not None %}
+                <option value="{% url 'team_view' t.pk %}"> 
+                    {{t.course.masterCourse.code }} / {{t}}
+                </option> 
+            {% else %}
+                <option value="{% url 'team_view' t.pk %}" disabled> 
+                    {{t.course.masterCourse.code }} / {{t}}
+                </option> 
+            {% endif %} 
         {% endfor %}
     </select>
 </div>
