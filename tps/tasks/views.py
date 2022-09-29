@@ -2,7 +2,7 @@ from difflib import diff_bytes
 from doctest import master
 from re import T
 from tokenize import group
-from django.contrib.auth import authenticate, login, logout, update_session_auth_hash 
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.models import Group, User
 from django.contrib.auth.forms import PasswordChangeForm
 from django.http.response import HttpResponse
@@ -20,17 +20,17 @@ from .forms import CommentForm, CourseForm, MasterCourseForm, MilestoneForm, Tas
 
 # Create your views here.
 
-def saveLog(mt:MasterTask, message, gizli:bool = False):
+def saveLog(mt: MasterTask, message, gizli: bool = False):
     l = MasterTaskLog()
-    l.mastertask = mt 
+    l.mastertask = mt
     l.taskstatus = mt.getStatus()
     l.log = message
-    l.gizli = gizli 
-    l.save() 
+    l.gizli = gizli
+    l.save()
 
-@login_required 
+@login_required
 def index(request):
-    from datetime import date 
+    from datetime import date
     bugun = date.today()
     for mt in MasterTask.objects.all():
         task = mt.get_task()
@@ -39,36 +39,40 @@ def index(request):
             mt.save()
             saveLog(mt, "Task is rejected because milestone is due.")
         if task.promised_date < bugun and mt.status < 4:
-            mt.status = 4 
+            mt.status = 4
             mt.save()
             saveLog(mt, "Task is rejected because due date has passed.")
-    
-    # redirect to another page for lecturer! 
+
+    # redirect to another page for lecturer!
     try:
-        d:Developer = Developer.objects.get(user=request.user)
+        d: Developer = Developer.objects.get(user=request.user)
         return redirect('team_view', d.team.all()[0].pk)
     except ObjectDoesNotExist:
-        try: 
-            l:Lecturer = Lecturer.objects.get(user=request.user)
+        try:
+            l: Lecturer = Lecturer.objects.get(user=request.user)
             return redirect('lecturer_view')
         except ObjectDoesNotExist:
             return redirect('logout')
 
+
 def update_view(request):
     return render(request, 'tasks/updates.html')
 
-@login_required 
+
+@login_required
 def team_view(request, team_id):
-    d:Developer = Developer.objects.get(user=request.user)
-    teams:Team([]) = d.team.all()
+    d: Developer = Developer.objects.get(user=request.user)
+    teams: Team([]) = d.team.all()
     t = Team.objects.get(pk=team_id)
-    
-    if t in teams :
+
+    if t in teams:
         devs = Developer.objects.all().filter(team=t)
         d.user.email = d.user.first_name + '.' + d.user.last_name + '@std.ieu.edu.tr'
-        # TODO 
-        milestone = t.course.get_current_milestone() # Milestone.objects.all().filter(course=t.course).order_by('due')[0]
-        mt = MasterTask.objects.all().filter(team=t).order_by('pk').reverse()[:10]
+        # TODO
+        # Milestone.objects.all().filter(course=t.course).order_by('due')[0]
+        milestone = t.course.get_current_milestone()
+        mt = MasterTask.objects.all().filter(
+            team=t).order_by('pk').reverse()[:10]
         context = {
             'page_title': 'Team Home',
             'tasks': mt,
@@ -80,25 +84,29 @@ def team_view(request, team_id):
             'milestone_lists': d.get_milestone_list(t.pk)
         }
         return render(request, 'tasks/index.html', context)
-    else : 
+    else:
         return redirect('team_view', d.team.all()[0].pk)
+
+
 @login_required
 def edit_task(request, task_id):
-    mt:MasterTask = get_object_or_404(MasterTask, pk=task_id)
-    t:Task = Task.objects.all().filter(masterTask=mt).order_by('pk').reverse()[0]
-    d:Developer = Developer.objects.get(user=request.user)
+    mt: MasterTask = get_object_or_404(MasterTask, pk=task_id)
+    t: Task = Task.objects.all().filter(
+        masterTask=mt).order_by('pk').reverse()[0]
+    d: Developer = Developer.objects.get(user=request.user)
     tm = mt.team
-    if mt.owner != d: # return to team view if the owner of the task is not this user
+    if mt.owner != d:  # return to team view if the owner of the task is not this user
         return redirect('team_view', tm.pk)
-    if mt.status != 1: # return to team view if the master task is not 1 (proposed)
+    # return to team view if the master task is not 1 (proposed)
+    if mt.status != 1:
         return redirect('team_view', tm.pk)
     if request.method == 'POST':
         form = TaskForm(request.POST)
         if form.is_valid():
-            task:Task = form.save(commit=False) 
-            task.pk = None 
-            task.masterTask = mt 
-            task.version = task.version + 1 
+            task: Task = form.save(commit=False)
+            task.pk = None
+            task.masterTask = mt
+            task.version = task.version + 1
             task.save()
 
             devs = Developer.objects.all().filter(team=tm)
@@ -111,16 +119,17 @@ def edit_task(request, task_id):
 
             subject = 'TPS:Notification || A task has been edited!'
             contentList = [
-                'Edited by: ' + str(mt.owner), 
+                'Edited by: ' + str(mt.owner),
                 'Title: ' + task.title,
                 'Description: ' + task.description,
                 'Priortiy: ' + task.getPriority(),
-                'Due date: '+ str(task.promised_date)
+                'Due date: ' + str(task.promised_date)
             ]
-            url = request._current_scheme_host + "/tasks/" + str(tm.pk) + str(task.masterTask_id)
+            url = request._current_scheme_host + "/tasks/" + \
+                str(tm.pk) + str(task.masterTask_id)
 
             html_message = render_to_string('tasks/email_template.html',
-            {'title':'A task has been edited.', 'contentList': contentList, 'url':url, 'background_color': '#003399'})
+            {'title': 'A task has been edited.', 'contentList': contentList, 'url': url, 'background_color': '#003399'})
 
             plain_message = strip_tags(html_message)
             from_email = 'no-reply@tps.info.tr'
@@ -409,8 +418,8 @@ def view_task(request, task_id):
         voted = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(owner=d))
         v_app = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(vote=True))
         v_den = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(vote=False))
-        reopen = False 
-        if mt.status == 1 and v_app > len(mt.team.developer_set.all())/2 :
+        reopen = False
+        if mt.status == 1 and v_app > (len(mt.team.developer_set.all()) - 1) / 2:
             mt.status = 2
             mt.save()
             
@@ -433,7 +442,7 @@ def view_task(request, task_id):
 
             send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
             saveLog(mt, "All approved. Task is now in open state.")
-        elif mt.status == 3 and v_app > len(mt.team.developer_set.all())/2 :
+        elif mt.status == 3 and v_app > (len(mt.team.developer_set.all()) - 1) / 2:
             mt.status = 5
             mt.save()
 
@@ -448,7 +457,7 @@ def view_task(request, task_id):
 
             send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
             saveLog(mt, "All approved. Task is now accepted!")
-        elif mt.status == 3 and v_den >= len(mt.team.developer_set.all())/2 :
+        elif mt.status == 3 and v_den >= (len(mt.team.developer_set.all()) - 1) / 2:
             reopen = True 
             
         try:
