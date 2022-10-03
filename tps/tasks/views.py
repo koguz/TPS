@@ -1,3 +1,4 @@
+from datetime import datetime
 from difflib import diff_bytes
 from doctest import master
 from re import T
@@ -161,6 +162,7 @@ def create_task(request, team_id):
             mastertask.milestone = milestone
             mastertask.owner = d
             mastertask.team = t
+            mastertask.created = datetime.now()
             mastertask.save() 
             task:Task = form.save(commit=False)
             task.masterTask = mastertask 
@@ -223,6 +225,7 @@ def complete_task(request, task_id):
         t:Task = Task.objects.all().filter(masterTask=mt).order_by('pk').reverse()[0]
         mt.status = 3 
         mt.difficulty = int(request.POST["difficulty"])
+        mt.completed = datetime.now()
         mt.save()
 
         difficulty = str
