@@ -67,7 +67,6 @@ def team_view(request, team_id):
 
     if t in teams:
         devs = Developer.objects.all().filter(team=t)
-        d.user.email = d.user.first_name + '.' + d.user.last_name + '@std.ieu.edu.tr'
         # TODO
         # Milestone.objects.all().filter(course=t.course).order_by('due')[0]
         milestone = t.course.get_current_milestone()
@@ -612,66 +611,129 @@ def create_master_course(request):
 @permission_required('tasks.add_team')
 @permission_required('tasks.add_developer')
 def create_team(request, course_id):
+    c = Course.objects.get(pk = course_id)
+    lecturer = Lecturer.objects.get(user = request.user)
+    teams: Team([]) = Team.objects.all().filter(course = c)
+    
+    team_names = []
+    for t in teams:
+        team_names.append(t.name)
+        
+    team_no = len(teams) + 1
+    
     if request.method == 'POST':
-        from random import shuffle # only needed here... 
         stdlist = request.POST["stdlist"].split('\r\n')
-        shuffle(stdlist)
-
-        cid = int(request.POST["course_id"])
-        course = Course.objects.get(pk=cid)
-        lecturer = Lecturer.objects.get(user=request.user)
-
-        team_size = int(request.POST["team_size"])
-        team_no = 1
-        team_std_count = 0
-        teams = dict()
-        steams = list() 
+        
+        devs = []
         for std in stdlist:
-            team_name = "Team " + str(team_no)
-            if team_name not in teams:
-                teams[team_name] = list() 
-                team_std_count = 0
-                team = Team() 
-                team.course = course 
-                team.name = team_name 
-                team.github = "ENTER YOUR GIT REP ADDRESS HERE"
-                team.supervisor = lecturer 
-                team.save()
-                steams.append(team)
-            
             fields = std.split('\t')
             uniId = fields[1].strip()
-            fullname = fields[2].strip() + " " + fields[3].strip()
-            teams[team_name].append([uniId, fullname])
-            team_std_count += 1 
-            if team_std_count == team_size:
-                team_no += 1
+            fullname = fields[2].strip() + " " + fields[3].strip()    
+            u:User = User.objects.filter(username = uniId)
+            if not u.exists():
+                us = User.objects.create_user(uniId, None, uniId)
+                us.first_name = fields[2].strip()
+                us.last_name = fields[3].strip()
+                group = Group.objects.get(name="student")
+                us.groups.add(group)
+                us.save()
+                d = Developer()
+                d.user = us 
+                d.save()
             
-            # add to team 
-            user = User.objects.create_user(uniId, None, uniId)
-            user.first_name = fields[2].strip()
-            user.last_name = fields[3].strip()
-            group = Group.objects.get(name="student")
-            user.groups.add(group)
-            user.save()
-            d = Developer()
-            d.user = user 
-            d.save()
-            d.team.add(steams[-1])
-            d.save()
-        
-        return render(request, 'tasks/team_success.html', {
+            u:User = User(User.objects.get(username = uniId))
+            dev: Developer = Developer.objects.get(user = u.pk)
+            
+            t:Team = dev.team.all().filter(course = c)
+            if t.exists():
+                continue
+            else:
+                devs.append(dev)
+                
+        if 'auto' in request.POST:
+            from random import shuffle 
+            shuffle(devs)
+            
+            team_size = int(request.POST["team_size"])
+            team_std_count = 0
+            
+            for d in devs:
+                team_name = "Team" + " " + str(team_no)
+                if team_name not in team_names:
+                    t = Team()
+                    team_std_count = 0
+                    t.course = c
+                    t.name = team_name
+                    t.github = "ENTER YOUT GIT REP ADDRESS HERE"
+                    t.supervisor = lecturer
+                    t.save()
+                    team_names.append(team_name)
+                
+                team_std_count += 1
+                if team_std_count == team_size:
+                    team_no+=1
+                t: Team = Team.objects.all().get(name = team_name, course = c)
+                d.team.add(t)
+                d.save()
+            
+            teams: Team([]) = Team.objects.all().filter(course = c)
+            
+            t_d = {}
+            for t in teams:
+                devs: Developer([]) = list(Developer.objects.all().filter(team = t))
+                t_d[t.name] = []
+                for d in devs:
+                    t_d[t.name].append(d)
+            
+            return render(request, 'tasks/team_success.html', {
             'page_title': 'Results',
-            'teams': teams
-        })
-    else: 
-    # provide a text area for student names
-        course = Course.objects.get(pk=course_id)
+            't_d': t_d,
+            })    
+            
+        elif 'manuel' in request.POST:
+            if devs:
+                team_name = "Team" + " " + str(team_no)
+                t = Team()
+                t.course = c
+                t.name = team_name
+                t.github = "ENTER YOUT GIT REP ADDRESS HERE"
+                t.supervisor = lecturer
+                t.save()
+            for d in devs:
+                team: Team = Team.objects.all().get(name = team_name, course = c)
+                d.team.add(team)
+                d.save()
+            team_no+=1
+            
+            teams: Team([]) = Team.objects.all().filter(course = c)
+            t_d = {}
+            for t in teams:
+                devs: Developer([]) = list(Developer.objects.all().filter(team = t))
+                t_d[t.name] = []
+                for d in devs:
+                    t_d[t.name].append(d)
+            
+            return render(request, 'tasks/team_create.html', {
+             'page_title': 'Create Teams',
+             'course': c,
+             'team_no': team_no,
+             't_d': t_d
+            })
+    else:
+        teams: Team([]) = Team.objects.all().filter(course = c)
+        t_d = {}
+        for t in teams:
+            devs: Developer([]) = list(Developer.objects.all().filter(team = t))
+            t_d[t.name] = []
+            for d in devs:
+                t_d[t.name].append(d)
         return render(request, 'tasks/team_create.html', {
             'page_title': 'Create Teams',
-            'course': course
-        })
-    
+            'course': c,
+            'team_no': team_no,
+            't_d': t_d
+            })      
+            
 @login_required
 @permission_required('tasks.add_team')
 def lecturer_course_view(request, course_id):
