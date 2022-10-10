@@ -163,7 +163,7 @@ def create_task(request, team_id):
             mastertask.owner = d
             mastertask.team = t
             mastertask.created = datetime.now()
-            mastertask.save() 
+            mastertask.save()
             task:Task = form.save(commit=False)
             task.masterTask = mastertask 
             task.save()
@@ -535,17 +535,25 @@ def profile (request):
 @login_required
 def my_details (request):
     u = request.user
-    d: Developer = Developer.objects.get(user=u)
-    if request.method == 'POST':
-        form = PhotoURLChangeForm(request.POST)
-        if form.is_valid():
-            dnew = form.save(commit=False)
-            dnew.pk = d.pk
-            dnew.user = d.user
-            dnew.save()
-            return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': d, 'form': form })        
-    else:
-        form = PhotoURLChangeForm(instance = u)
+    try:
+        d: Developer = Developer.objects.get(user=u)
+        if request.method == 'POST':
+            form = PhotoURLChangeForm(request.POST)
+            if form.is_valid():
+                dnew = form.save(commit=False)
+                dnew.pk = d.pk
+                dnew.user = d.user
+                dnew.save()
+            return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': d, 'form': form })     
+        else:
+            form = PhotoURLChangeForm(instance = u)   
+            return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': d, 'form': form })
+    except ObjectDoesNotExist:
+        try:
+            l: Lecturer = Lecturer.objects.get(user=request.user)
+            return render(request, 'tasks/profile_lecturer.html', {'page_title': 'My Details', 'dev': l})        
+        except ObjectDoesNotExist:
+         form = PhotoURLChangeForm(instance = u)
         return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': d, 'form': form })
 
     
