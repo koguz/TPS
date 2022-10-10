@@ -96,6 +96,7 @@ class Team(models.Model):
 class Developer(models.Model):
     user = models.OneToOneField(User, on_delete=CASCADE)
     team = models.ManyToManyField(Team, blank=True)
+    photoURL = models.URLField(max_length=200, default="https://cdn0.iconfinder.com/data/icons/social-media-network-4/48/male_avatar-512.png", blank=True)
 
     # team = models.ForeignKey(Team, on_delete=SET_NULL, blank=True, null=True)
 

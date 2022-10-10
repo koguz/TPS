@@ -16,7 +16,7 @@ from django.utils.html import strip_tags
 
 
 from tasks.models import *
-from .forms import CommentForm, CourseForm, MasterCourseForm, MilestoneForm, TaskForm, TeamFormStd, EmailChangeForm
+from .forms import CommentForm, CourseForm, MasterCourseForm, MilestoneForm, PhotoURLChangeForm, TaskForm, TeamFormStd, EmailChangeForm
 
 
 # Create your views here.
@@ -534,17 +534,32 @@ def profile (request):
 
 @login_required
 def my_details (request):
-    return render(request, 'tasks/my_details.html', {'page_title': 'My Details' })
+    u = request.user
+    d: Developer = Developer.objects.get(user=u)
+    if request.method == 'POST':
+        form = PhotoURLChangeForm(request.POST)
+        if form.is_valid():
+            dnew = form.save(commit=False)
+            dnew.pk = d.pk
+            dnew.user = d.user
+            dnew.save()
+            return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': d, 'form': form })        
+    else:
+        form = PhotoURLChangeForm(instance = u)
+        return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': d, 'form': form })
 
+    
 @login_required
 def change_password(request):
+    u = request.user
+    d: Developer = Developer.objects.get(user=u)
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, data=request.POST)
         if form.is_valid():
             form.save()
             update_session_auth_hash(request, form.user)
             return render(request, 'tasks/password_success.html', {
-                'page_title': 'Password changed.'
+                'page_title': 'Password changed.','dev': d
             })
         else:
             return render(
@@ -553,12 +568,13 @@ def change_password(request):
                 {
                     'page_title': 'Change Password',
                     'form': form,
-                    'pass_error': 'Failed. Password not changed.'
+                    'pass_error': 'Failed. Password not changed.',
+                    'dev': d
                 }
             ) 
     else:
         form = PasswordChangeForm(request.user)
-        return render(request, 'tasks/change_password.html', {'page_title': 'Change Password', 'form': form })
+        return render(request, 'tasks/change_password.html', {'page_title': 'Change Password', 'form': form,'dev': d })
 
 @login_required
 def my_teams (request):
@@ -567,6 +583,7 @@ def my_teams (request):
 @login_required
 def my_email (request):
     u = request.user
+    d: Developer = Developer.objects.get(user=u)
     if request.method == 'POST':
         form = EmailChangeForm(request.POST)
         if form.is_valid():
@@ -577,10 +594,10 @@ def my_email (request):
             unew.username = u.username
             unew.password = u.password
             unew.save()
-            return render(request, 'tasks/my_email.html', { 'user': u, 'form': form })
+            return render(request, 'tasks/my_email.html', { 'user': u, 'form': form, 'dev': d })
     else:
         form = EmailChangeForm(instance = u)
-        return render(request, 'tasks/my_email.html', {'user': u, 'form': form})
+        return render(request, 'tasks/my_email.html', {'user': u, 'form': form, 'dev': d})
 
 
 @login_required
