@@ -38,6 +38,7 @@
             <th scope="col">Title</th>
             <th scope="col">Milestone</th>
             <th scope="col">Status</th>
+            <th scope="col">Completion Time</th>
         </tr>
     </thead>
     <tbody>
@@ -48,6 +49,11 @@
             <td><a href="{% url 'lecturer_view_task' task.pk %}">{{task}}</a></td>
             <td>{{task.milestone}}</td>
             <td>{{task.getStatus}}</td>
+            {% if task.completed %}
+                <td>{{task.completed|timeuntil:task.created}}</td>
+            {% else %}    
+                <td>-</td>
+            {% endif %}
         </tr>
     {% endfor %}
     </tbody>
