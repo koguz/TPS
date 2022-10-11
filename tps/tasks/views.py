@@ -544,7 +544,9 @@ def my_details (request):
                 dnew.pk = d.pk
                 dnew.user = d.user
                 dnew.save()
-            return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': d, 'form': form })     
+                return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': dnew, 'form': form })
+            else:
+                return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': d, 'form': form })    
         else:
             form = PhotoURLChangeForm(instance = u, initial={"photoURL": d.photoURL}) 
             return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': d, 'form': form })
