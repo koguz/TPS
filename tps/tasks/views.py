@@ -546,7 +546,7 @@ def my_details (request):
                 dnew.save()
             return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': d, 'form': form })     
         else:
-            form = PhotoURLChangeForm(instance = u)   
+            form = PhotoURLChangeForm(instance = u, initial={"photoURL": d.photoURL}) 
             return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': d, 'form': form })
     except ObjectDoesNotExist:
         try:
