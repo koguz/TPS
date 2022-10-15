@@ -551,25 +551,28 @@ def my_details (request):
             form = PhotoURLChangeForm(instance = u, initial={"photoURL": d.photoURL}) 
             return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': d, 'form': form })
     except ObjectDoesNotExist:
-        try:
-            l: Lecturer = Lecturer.objects.get(user=request.user)
-            return render(request, 'tasks/profile_lecturer.html', {'page_title': 'My Details', 'dev': l})        
-        except ObjectDoesNotExist:
-         form = PhotoURLChangeForm(instance = u)
-        return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': d, 'form': form })
+        if request.method == 'POST':
+            form = PasswordChangeForm(request.user, data=request.POST)
+            if form.is_valid():
+                form.save()
+                update_session_auth_hash(request, form.user)
+                return render(request, 'tasks/password_success.html', {
+                    'page_title': 'Password changed.'
+                })
+        else:
+            form = PasswordChangeForm(request.user)
+            return render(request, 'tasks/profile_lecturer.html', {'form': form})        
 
     
 @login_required
 def change_password(request):
-    u = request.user
-    d: Developer = Developer.objects.get(user=u)
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, data=request.POST)
         if form.is_valid():
             form.save()
             update_session_auth_hash(request, form.user)
             return render(request, 'tasks/password_success.html', {
-                'page_title': 'Password changed.','dev': d
+                'page_title': 'Password changed.'
             })
         else:
             return render(
@@ -579,12 +582,12 @@ def change_password(request):
                     'page_title': 'Change Password',
                     'form': form,
                     'pass_error': 'Failed. Password not changed.',
-                    'dev': d
                 }
             ) 
     else:
         form = PasswordChangeForm(request.user)
-        return render(request, 'tasks/change_password.html', {'page_title': 'Change Password', 'form': form,'dev': d })
+        return render(request, 'tasks/change_password.html', {'page_title': 'Change Password', 'form': form})
+
 
 @login_required
 def my_teams (request):
