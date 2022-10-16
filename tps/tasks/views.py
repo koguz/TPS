@@ -566,6 +566,8 @@ def my_details (request):
     
 @login_required
 def change_password(request):
+    u = request.user
+    d: Developer = Developer.objects.get(user=u)
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, data=request.POST)
         if form.is_valid():
@@ -586,7 +588,7 @@ def change_password(request):
             ) 
     else:
         form = PasswordChangeForm(request.user)
-        return render(request, 'tasks/change_password.html', {'page_title': 'Change Password', 'form': form})
+        return render(request, 'tasks/change_password.html', {'page_title': 'Change Password', 'form': form, 'dev':d})
 
 
 @login_required
