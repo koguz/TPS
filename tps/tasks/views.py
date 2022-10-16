@@ -577,7 +577,7 @@ def change_password(request):
         else:
             return render(
                 request,
-                'tasks/password.html',
+                'tasks/change_password.html',
                 {
                     'page_title': 'Change Password',
                     'form': form,
