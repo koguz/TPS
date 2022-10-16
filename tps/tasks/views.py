@@ -162,7 +162,6 @@ def create_task(request, team_id):
             mastertask.milestone = milestone
             mastertask.owner = d
             mastertask.team = t
-            mastertask.created = datetime.now()
             mastertask.save()
             task:Task = form.save(commit=False)
             task.masterTask = mastertask 
@@ -423,6 +422,7 @@ def view_task(request, task_id):
         reopen = False
         if mt.status == 1 and v_app > (len(mt.team.developer_set.all()) - 1) / 2:
             mt.status = 2
+            mt.opened = datetime.now()
             mt.save()
             
             subject = 'TPS:Notification || The task you created is now in open state.'

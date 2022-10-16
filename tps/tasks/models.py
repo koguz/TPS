@@ -162,7 +162,7 @@ class MasterTask(models.Model):
     milestone = models.ForeignKey(Milestone, on_delete=CASCADE)
     owner = models.ForeignKey(Developer, on_delete=CASCADE)
     team = models.ForeignKey(Team, on_delete=CASCADE)
-    created = models.DateTimeField("Creation Date", null=True)
+    opened = models.DateTimeField("Opened Date", null=True)
     completed = models.DateTimeField("Completion Date", null=True)
     difficulty = models.PositiveSmallIntegerField("Difficulty", choices=DIFFICULTY, default=2)
     status = models.PositiveSmallIntegerField("Status", choices=STATUS, default=1)
