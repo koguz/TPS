@@ -1,0 +1,64 @@
+{% extends "tasks/base.html" %} {% load static %} {% block breadcrumbs %}
+
+<h1 class="text" style="font-weight: 400; font-size: 30px; margin-top: 10px">
+  Settings
+</h1>
+
+{% endblock %} {% block left_content %}
+<style>
+  .menus {
+    margin-bottom: 20px;
+    font-weight: 800;
+    text-decoration: none;
+    color: gray;
+  }
+  .selected {
+    margin-bottom: 20px;
+    font-weight: 800;
+    text-decoration: none;
+    color: black;
+  }
+  a:link {
+    color: black;
+  }
+  /* mouse over link */
+  a:hover {
+    color: orange;
+  }
+
+  /* selected link */
+  a:active {
+    color: black;
+  }
+
+  .avatar {
+    vertical-align: middle;
+    width: 125px;
+    height: 125px;
+    border-radius: 50%;
+  }
+</style>
+<div>
+  <img class="avatar" src="{{dev.photoURL}}" id="output" width="100px" />
+  <hr />
+  <div style="margin-bottom: 10px">
+    <a
+      id="my_details"
+      class="menus"
+      href="{% url 'my_details' %}"
+      onClick="changeClass('my_details')"
+      >My Details</a
+    >
+  </div>
+  <div style="margin-bottom: 10px">
+    <a id="password" class="menus" href="{% url 'change_password' %}"
+      >Password</a
+    >
+  </div>
+
+  <div style="margin-bottom: 10px">
+    <a id="email_option" class="menus" href="{% url 'email' %}">Email</a>
+  </div>
+</div>
+
+{% endblock %}

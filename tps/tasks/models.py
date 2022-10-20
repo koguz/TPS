@@ -3,7 +3,7 @@ from django.db.models.deletion import CASCADE, SET_NULL
 from django.db.models.fields.related import ForeignKey
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 def past_date_validator(value):
     import datetime 
@@ -96,6 +96,8 @@ class Team(models.Model):
 class Developer(models.Model):
     user = models.OneToOneField(User, on_delete=CASCADE)
     team = models.ManyToManyField(Team, blank=True)
+    photoURL = models.URLField(max_length=200, default="https://cdn0.iconfinder.com/data/icons/social-media-network-4/48/male_avatar-512.png", blank=True)
+
     # team = models.ForeignKey(Team, on_delete=SET_NULL, blank=True, null=True)
 
     def __str__(self):
@@ -122,17 +124,17 @@ class Developer(models.Model):
     
     # we have to get the milestone names and points
     # for those milestones in a dictionary, so that i can loop through it in the template...
-    def get_milestone_list(self):
+    def get_milestone_list(self, team_id):
         milestone_list = {}
-        t = self.team.all()[0]
+        t = Team.objects.get(pk=team_id)
         for m in t.course.milestone_set.all():
             milestone_list[m.name] = self.get_developer_grade(m)
         return milestone_list
 
-    def get_project_grade(self):
+    def get_project_grade(self, team_id):
         team_grade = 0
         ind_grade = 0
-        t = self.team.all()[0]
+        t = Team.objects.get(pk=team_id)
         c = t.course 
         for m in c.milestone_set.all():
             team_grade = team_grade + t.get_team_points(m) * (m.weight / 100)
@@ -160,7 +162,8 @@ class MasterTask(models.Model):
     milestone = models.ForeignKey(Milestone, on_delete=CASCADE)
     owner = models.ForeignKey(Developer, on_delete=CASCADE)
     team = models.ForeignKey(Team, on_delete=CASCADE)
-    completed = models.DateField("Completion Date", null=True)
+    opened = models.DateTimeField("Opened Date", null=True)
+    completed = models.DateTimeField("Completion Date", null=True)
     difficulty = models.PositiveSmallIntegerField("Difficulty", choices=DIFFICULTY, default=2)
     status = models.PositiveSmallIntegerField("Status", choices=STATUS, default=1)
 

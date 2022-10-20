@@ -192,9 +192,9 @@
             <button class="btn btn-success" type="submit" name="approve" value="Update"><i class="bi bi-arrow-clockwise"></i> Update</button>
             {% endif %}
             <button class="btn btn-primary" type="submit" name="approve" value="C"><i class="bi bi-chat-right"></i> Comment</button>
-            {% if voted == 0 and not mytask and mastertask.status < 4 %}
-            <button class="btn btn-success" type="submit" name="approve" value="Yes"><i class="bi bi-check-square"></i> Approve</button>
-            <button class="btn btn-danger" type="submit" name="approve" value="No"><i class="bi bi-x-square"></i> Request Revision</button>
+            {% if voted == 0 and not mytask and mastertask.status < 4 and mastertask.status is not 2 %}
+                <button class="btn btn-success" type="submit" name="approve" value="Yes"><i class="bi bi-check-square"></i> Approve</button>
+                <button class="btn btn-danger" type="submit" name="approve" value="No"><i class="bi bi-x-square"></i> Request Revision</button>
             {% endif %}
             
         </td>

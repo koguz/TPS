@@ -1,52 +1,40 @@
-{% extends "tasks/base.html" %}
-{% load static %}
-
-{% block customcss %}
+{% extends "tasks/base.html" %} {% load static %} {% block customcss %}
 
 <style type="text/css">
+  input[type="text"] {
+    margin-bottom: -1px;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+  }
 
-
-input[type="text"] {
-  margin-bottom: -1px;
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-input[type="password"] {
-  margin-bottom: 10px;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-
+  input[type="password"] {
+    margin-bottom: 10px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
 </style>
 
-{% endblock %}
-
-{% block menubar %} {% endblock %}
-
-{% block  main_content %}
-
+{% endblock %} {% block menubar %} {% endblock %} {% block main_content %}
 
 <div class="form">
-    <h3 style="padding-bottom: 20px;">TPS Login</h3>
-    <form action="{% url 'login' %}" method="post">
-        {% csrf_token %}
-        <div class="form-floating">
-            <input type="text" class="form-control" name="universityid">
-            <label for="floatingInput">University ID</label>
-        </div>
-        <div class="form-floating">
-            <input type="password" class="form-control" name="tpspass">
-            <label for="floatingPassword">TPS Password</label>
-        </div>
+  <h3 style="padding-bottom: 20px">TPS Login</h3>
+  <form action="{% url 'login' %}" method="post">
+    {% csrf_token %}
+    <div class="form-floating">
+      <input type="text" class="form-control" name="universityid" />
+      <label for="floatingInput">University ID</label>
+    </div>
+    <div class="form-floating">
+      <input type="password" class="form-control" name="tpspass" />
+      <label for="floatingPassword">TPS Password</label>
+    </div>
 
-        <button class="w-100 btn btn-lg btn-primary" type="submit">Login</button>
-
-    </form>
+    <button class="w-100 btn btn-lg btn-primary" type="submit">Login</button>
+  </form>
 </div>
 
 <div style="padding-top: 20px; color: red">
-    <p>{{ login_error }}</p>
+  <p>{{ login_error }}</p>
 </div>
 
 {% endblock %}

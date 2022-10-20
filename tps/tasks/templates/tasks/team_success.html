@@ -11,14 +11,14 @@
 <h4>Successfully created teams for...<br /> {{ course }} </h4>
 
 <table class="table">
-{% for key, value in teams.items %}
+{% for key, value in t_d.items %}
     <tr>
         <td colspan="2"><b>{{ key }}</b></td>
     </tr>
-    {% for std in value %}
+    {% for dev in value %}
     <tr>
-        <td>{{ std.0 }}</td>
-        <td>{{ std.1 }}</td>
+        <td>{{ dev.user.username }}</td>
+        <td> {{ dev.getName }}</td>
     </tr>
     {% endfor %}
 {% endfor %}

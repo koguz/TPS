@@ -49,3 +49,14 @@ class TeamFormStd(ModelForm):
     class Meta:
         model = Team 
         fields = ['name', 'github']
+
+class EmailChangeForm(ModelForm):
+    class Meta:
+        model = User
+        fields = ['email']
+
+class PhotoURLChangeForm(ModelForm):
+    class Meta:
+        model = Developer
+        fields = ['photoURL']
+        exculude = ['team']

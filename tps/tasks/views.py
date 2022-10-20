@@ -1,29 +1,37 @@
-from django.contrib.auth import authenticate, login, logout, update_session_auth_hash 
+from datetime import datetime
+from difflib import diff_bytes
+from doctest import master
+from re import T
+from tokenize import group
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.models import Group, User
 from django.contrib.auth.forms import PasswordChangeForm
 from django.http.response import HttpResponse
-# from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
 
 from tasks.models import *
-from .forms import CommentForm, CourseForm, MasterCourseForm, MilestoneForm, TaskForm, TeamFormStd
+from .forms import CommentForm, CourseForm, MasterCourseForm, MilestoneForm, PhotoURLChangeForm, TaskForm, TeamFormStd, EmailChangeForm
 
 
 # Create your views here.
 
-def saveLog(mt:MasterTask, message, gizli:bool = False):
+def saveLog(mt: MasterTask, message, gizli: bool = False):
     l = MasterTaskLog()
-    l.mastertask = mt 
+    l.mastertask = mt
     l.taskstatus = mt.getStatus()
     l.log = message
-    l.gizli = gizli 
-    l.save() 
+    l.gizli = gizli
+    l.save()
 
-@login_required 
+@login_required
 def index(request):
-    from datetime import date 
+    from datetime import date
     bugun = date.today()
     for mt in MasterTask.objects.all():
         task = mt.get_task()
@@ -32,75 +40,120 @@ def index(request):
             mt.save()
             saveLog(mt, "Task is rejected because milestone is due.")
         if task.promised_date < bugun and mt.status < 4:
-            mt.status = 4 
+            mt.status = 4
             mt.save()
             saveLog(mt, "Task is rejected because due date has passed.")
-    
-    # redirect to another page for lecturer! 
+
+    # redirect to another page for lecturer!
     try:
-        d:Developer = Developer.objects.get(user=request.user)
-        return redirect('team_view')
+        d: Developer = Developer.objects.get(user=request.user)
+        return redirect('team_view', d.team.all()[0].pk)
     except ObjectDoesNotExist:
-        try: 
-            l:Lecturer = Lecturer.objects.get(user=request.user)
+        try:
+            l: Lecturer = Lecturer.objects.get(user=request.user)
             return redirect('lecturer_view')
         except ObjectDoesNotExist:
             return redirect('logout')
 
+
 def update_view(request):
     return render(request, 'tasks/updates.html')
 
-@login_required 
-def team_view(request):
-    d:Developer = Developer.objects.get(user=request.user)
-    t:Team = d.team.all()[0]
-    devs = Developer.objects.all().filter(team=t)
-    # TODO 
-    milestone = t.course.get_current_milestone() # Milestone.objects.all().filter(course=t.course).order_by('due')[0]
-    mt = MasterTask.objects.all().filter(team=t).order_by('pk').reverse()[:10]
-    context = {
-        'page_title': 'Team Home',
-        'tasks': mt,
-        'team': t,
-        'devs': devs,
-        'milestone': milestone
-    }
-    return render(request, 'tasks/index.html', context)
+
+@login_required
+def team_view(request, team_id):
+    d: Developer = Developer.objects.get(user=request.user)
+    teams: Team([]) = d.team.all()
+    t = Team.objects.get(pk=team_id)
+
+    if t in teams:
+        devs = Developer.objects.all().filter(team=t)
+        # TODO
+        # Milestone.objects.all().filter(course=t.course).order_by('due')[0]
+        milestone = t.course.get_current_milestone()
+        mt = MasterTask.objects.all().filter(
+            team=t).order_by('pk').reverse()[:10]
+        context = {
+            'page_title': 'Team Home',
+            'tasks': mt,
+            'team': t,
+            'devs': devs,
+            'milestone': milestone,
+            'teams': teams,
+            'project_grade': d.get_project_grade(t.pk),
+            'milestone_lists': d.get_milestone_list(t.pk)
+        }
+        return render(request, 'tasks/index.html', context)
+    else:
+        return redirect('team_view', d.team.all()[0].pk)
+
 
 @login_required
 def edit_task(request, task_id):
-    mt:MasterTask = get_object_or_404(MasterTask, pk=task_id)
-    t:Task = Task.objects.all().filter(masterTask=mt).order_by('pk').reverse()[0]
-    d:Developer = Developer.objects.get(user=request.user)
-    if mt.owner != d: # return to team view if the owner of the task is not this user
-        return redirect('team_view')
-    if mt.status != 1: # return to team view if the master task is not 1 (proposed)
-        return redirect('team_view')
+    mt: MasterTask = get_object_or_404(MasterTask, pk=task_id)
+    t: Task = Task.objects.all().filter(
+        masterTask=mt).order_by('pk').reverse()[0]
+    d: Developer = Developer.objects.get(user=request.user)
+    tm = mt.team
+    if mt.owner != d:  # return to team view if the owner of the task is not this user
+        return redirect('team_view', tm.pk)
+    # return to team view if the master task is not 1 (proposed)
+    if mt.status != 1:
+        return redirect('team_view', tm.pk)
     if request.method == 'POST':
         form = TaskForm(request.POST)
         if form.is_valid():
-            task:Task = form.save(commit=False) 
-            task.pk = None 
-            task.masterTask = mt 
-            task.version = task.version + 1 
+            task: Task = form.save(commit=False)
+            task.pk = None
+            task.masterTask = mt
+            task.version = task.version + 1
             task.save()
+
+            devs = Developer.objects.all().filter(team=tm)
+
+            receivers = []
+
+            for developer in devs:
+                if developer != d:
+                    receivers.append(developer.user.email)
+
+            subject = 'TPS:Notification || A task has been edited!'
+            contentList = [
+                'Edited by: ' + str(mt.owner),
+                'Title: ' + task.title,
+                'Description: ' + task.description,
+                'Priortiy: ' + task.getPriority(),
+                'Due date: ' + str(task.promised_date)
+            ]
+            url = request._current_scheme_host + "/tasks/" + \
+                str(tm.pk) + str(task.masterTask_id)
+
+            html_message = render_to_string('tasks/email_template.html',
+            {'title': 'A task has been edited.', 'contentList': contentList, 'url': url, 'background_color': '#003399'})
+
+            plain_message = strip_tags(html_message)
+            from_email = 'no-reply@tps.info.tr'
+
+            send_mail(subject, plain_message, from_email, receivers, html_message=html_message)
             saveLog(mt, "Task is edited by " + str(d) + ".")
+
             return redirect('view_task', task_id)
         else: 
-            return redirect('team_view')
+            return redirect('team_view', tm.pk)
     else:
         form = TaskForm(instance=t)
         context = {
             'page_title': 'Edit task',
             'form': form, 
-            'mastertask': mt
+            'mastertask': mt,
+            'team': tm
         }
         return render(request, "tasks/task_edit.html", context)
 
 @login_required
-def create_task(request):
+def create_task(request, team_id):
     d = Developer.objects.get(user=request.user)
-    t:Team = d.team.all()[0]
+    t:Team = Team.objects.get(pk=team_id)
     milestone = t.course.get_current_milestone() #Milestone.objects.all().filter(course=t.course).order_by('due')[0]
     if request.method == 'POST':
         form = TaskForm(request.POST)
@@ -109,13 +162,41 @@ def create_task(request):
             mastertask.milestone = milestone
             mastertask.owner = d
             mastertask.team = t
-            mastertask.save() 
-
+            mastertask.save()
             task:Task = form.save(commit=False)
             task.masterTask = mastertask 
             task.save()
+            mastertask.team.developer_set
+
+            devs = Developer.objects.all().filter(team=t)
+
+            receivers = []
+
+            for developer in devs:
+                if developer != d:
+                    receivers.append(developer.user.email)
+
+            contentList = [
+                'Creator: ' + str(mastertask.owner),
+                'Title: ' + task.title,
+                'Description: ' + task.description,
+                'Priority: ' + task.getPriority(),
+                'Due date: ' + str(task.promised_date)
+            ]
+
+            subject = 'TPS:Notification || A task has been created'
+
+            url = request._current_scheme_host + "/tasks/" + str(task.masterTask_id)
+
+            html_message = render_to_string('tasks/email_template.html',
+            {'title':'A task has been created!', 'contentList':contentList, 'url': url, 'background_color': '#003399'})
+
+            plain_message = strip_tags(html_message)
+            from_email = 'no-reply@tps.info.tr'
+
+            send_mail(subject, plain_message, from_email, receivers, html_message=html_message)
             saveLog(mastertask, "Task is created by " + str(d) + ".")
-            return redirect('team_view')
+            return redirect('team_view', team_id)
         else:
             context={'page_title': 'Create New Task', 'form': form, 'milestone': milestone}
             return render(request, "tasks/task_create.html", context)
@@ -125,7 +206,8 @@ def create_task(request):
         context = {
             'page_title': 'Create New Task',
             'form': form, 
-            'milestone': milestone
+            'milestone': milestone,
+            'team': t
         } 
         return render(request, "tasks/task_create.html", context)
 
@@ -134,23 +216,67 @@ def complete_task(request, task_id):
     mt:MasterTask = get_object_or_404(MasterTask, pk=task_id)
     t:Task = Task.objects.all().filter(masterTask=mt).order_by('pk').reverse()[0]
     d:Developer = Developer.objects.get(user=request.user)
+    tm = mt.team
     if mt.owner != d:
-        return redirect('team_view')
+        return redirect('team_view', tm.pk)
     if request.method == 'POST':
         mt:MasterTask = get_object_or_404(MasterTask, pk=task_id)
         t:Task = Task.objects.all().filter(masterTask=mt).order_by('pk').reverse()[0]
         mt.status = 3 
         mt.difficulty = int(request.POST["difficulty"])
+        mt.completed = datetime.now()
         mt.save()
+
+        difficulty = str
+        if mt.difficulty == 1:
+            difficulty = 'Easy'
+        elif mt.difficulty == 2:
+            difficulty = 'Normal'
+        elif mt.difficulty == 3:
+            difficulty = 'Difficult'
+
+        devs = Developer.objects.all().filter(team=tm)
+
+        receivers = []
+
+        for developer in devs:
+            if developer != d:
+                receivers.append(developer.user.email)
+ 
+        subject = 'TPS:Notification || A task has been completed'
+
+        contentList = [
+            'Creator: ' + str(mt.owner), 
+            'Title: ' + t.title,
+            'Description: ' + t.description,
+            'Priortiy: ' + t.getPriority(),
+            'Difficulty: ' + difficulty,
+            'Due date: '+ str(t.promised_date)
+        ]
+
+        url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
+
+        html_message = render_to_string('tasks/email_template.html',
+        {'title':'A task has been completed!', 'contentList': contentList, 'url':url, 'background_color': '#003399'})
+
+        plain_message = strip_tags(html_message)
+        from_email = 'no-reply@tps.info.tr'
+
+        send_mail(subject, plain_message, from_email, receivers, html_message=html_message)       
         saveLog(mt, "Task is completed by " + str(d) + ".")
+        
+        context = {
+            'team': tm
+        }
+        
         return redirect('view_task', task_id)
     else: 
-        return redirect('team_view')
+        return redirect('team_view', tm.pk)
 
 @login_required 
-def edit_team(request):
+def edit_team(request, team_id):
     d:Developer = Developer.objects.get(user=request.user)
-    t:Team = d.team.all()[0]
+    t:Team = Team.objects.get(pk=team_id)
     print(t.name, t.github)
     if request.method == 'POST':
         form = TeamFormStd(request.POST)
@@ -160,22 +286,24 @@ def edit_team(request):
             tnew.supervisor = t.supervisor 
             tnew.course = t.course
             tnew.save()
-            return redirect('team_view')
+            return redirect('team_view', team_id)
     else:
         form = TeamFormStd(instance=t)
         context = {
             'page_title': 'Edit Team Information',
-            'form': form
+            'form': form,
+            'team': t
         }
         return render(request, "tasks/team_edit_std.html", context)
 
 
 @login_required 
-def like_task(request, task_id, liked):
+def like_task(request,task_id, liked):
     mt:MasterTask = get_object_or_404(MasterTask, pk=task_id)
     d:Developer = Developer.objects.get(user=request.user)
+    
     if mt.owner == d:
-        return redirect('team_view')
+        return redirect('team_view', mt.team.pk)
     try:
         # if like object exists, toggle like
         like = Like.objects.get(owner=d, mastertask=mt)
@@ -213,80 +341,152 @@ def view_task(request, task_id):
     mt:MasterTask = get_object_or_404(MasterTask, pk=task_id)
     t:Task = Task.objects.all().filter(masterTask=mt).order_by('pk').reverse()[0]
     d:Developer = Developer.objects.get(user=request.user)
-    tm = d.team.all()[0]
-    if mt.team != tm:
-        return redirect('team_view')
-    if request.method == 'POST':
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment:Comment = form.save(commit=False)
-            comment.owner = request.user
-            comment.mastertask = mt 
-            comment.task = t 
-            if mt.owner == d and mt.status == 3 and request.POST['approve'] == "Update":
-                Vote.objects.all().filter(task=t).filter(status=mt.status).delete() 
-                saveLog(mt, "Task is updated by"+ str(d) + ".")
-            if len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(owner=d)) == 0:
-                if request.POST['approve'] == "Yes":
-                    comment.approved = True 
-                    vote = Vote()
-                    vote.owner = d
-                    vote.task = t 
-                    vote.status = mt.status
-                    vote.vote = True 
-                    vote.save()
-                    saveLog(mt, "Task received an approve vote by "+ str(d) + ".")
-                elif request.POST['approve'] == "No":
-                    comment.approved = False
-                    vote = Vote()
-                    vote.owner = d
-                    vote.task = t 
-                    vote.status = mt.status 
-                    vote.vote = False 
-                    vote.save()
-                    saveLog(mt, "Task received a revision request by "+ str(d) + ".")
-            comment.save()
-            return redirect('view_task', task_id)
-    form = CommentForm()
-    comments = Comment.objects.all().filter(mastertask=mt).order_by('date').reverse()
-    voted = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(owner=d))
-    v_app = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(vote=True))
-    v_den = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(vote=False))
-    reopen = False 
-    if mt.status == 1 and v_app > len(mt.team.developer_set.all())/2 :
-        mt.status = 2
-        mt.save()
-        saveLog(mt, "All approved. Task is now in open state.")
-    elif mt.status == 3 and v_app > len(mt.team.developer_set.all())/2 :
-        mt.status = 5
-        mt.save()
-        saveLog(mt, "All approved. Task is now accepted!")
-    elif mt.status == 3 and v_den >= len(mt.team.developer_set.all())/2 :
-        reopen = True 
-        
-    try:
-        liked = Like.objects.get(owner = d, mastertask = mt).liked
-    except ObjectDoesNotExist:
-        liked = None 
 
-    logs = MasterTaskLog.objects.all().filter(mastertask=mt).filter(gizli=False).order_by('tarih').reverse()
+    if mt.team in d.team.all():
+        tm = mt.team
+        task_owner: Developer = mt.owner
+        if mt.team != tm:
+            return redirect('team_view', tm.pk)
+        if request.method == 'POST':
+            form = CommentForm(request.POST)
+            if form.is_valid():
+                comment:Comment = form.save(commit=False)
+                comment.owner = request.user
+                comment.mastertask = mt 
+                comment.task = t 
+                if mt.owner == d and mt.status == 3 and request.POST['approve'] == "Update":
+                    Vote.objects.all().filter(task=t).filter(status=mt.status).delete() 
+                    saveLog(mt, "Task is updated by"+ str(d) + ".")
+                if len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(owner=d)) == 0:
+                    if request.POST['approve'] == "Yes":
+                        comment.approved = True 
+                        vote = Vote()
+                        vote.owner = d
+                        vote.task = t 
+                        vote.status = mt.status
+                        vote.vote = True 
+                        vote.save()
+                        
+                        subject = 'TPS:Notification || The task you created has received an approve vote.'
+                        contentList = [
+                            'Your task called ' + t.title + ' has received an aprove vote.',
+                            'Approver: ' + str(d),
+                            str(d) + '\'s comment: ' + comment.body,
+                            'Priority: ' + t.getPriority(),
+                            'Due date: ' + str(t.promised_date)
+                        ]
 
-    context = {
-        'page_title': 'View Task',
-        'mastertask': mt,
-        'task': t, 
-        'tp': mt.difficulty * t.priority,
-        'form': form,
-        'voted': voted,
-        'mytask': mt.owner == d,
-        'v_app': v_app,
-        'v_den': v_den,
-        'reopen': reopen, 
-        'liked': liked, 
-        'comments': comments,
-        'logs' : logs
-    }
-    return render(request, "tasks/task_view.html", context)
+                        url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
+                        html_message = render_to_string('tasks/email_template.html',
+                        {'title': 'A task has received an approve vote!', 'contentList': contentList, 'url': url, 'background_color': '#5cb85c'})
+
+                        plain_message = strip_tags(html_message)
+                        from_email = 'no-reply@tps.info.tr'
+
+                        send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
+                        saveLog(mt, "Task received an approve vote by "+ str(d) + ".")
+                    elif request.POST['approve'] == "No":
+                        comment.approved = False
+                        vote = Vote()
+                        vote.owner = d
+                        vote.task = t 
+                        vote.status = mt.status 
+                        vote.vote = False 
+                        vote.save()
+
+                        subject = 'TPS:Notification || The task you created has received a revision request.'
+                        contentList = [
+                            'Your task called ' + t.title + ' has received a revision request.',
+                            'Requested by: ' + str(d),
+                            str(d) + '\'s comment: ' + comment.body,
+                            'Priority: ' + t.getPriority(),
+                            'Due date: ' + str(t.promised_date)
+                        ]
+                        url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
+                        html_message = render_to_string('tasks/email_template.html',
+                        {'title':'A task has received a revision request.', 'contentList': contentList, 'url':url, 'background_color': '#ff2400'})
+
+                        plain_message = strip_tags(html_message)
+                        from_email = 'no-reply@tps.info.tr'
+
+                        send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
+                        saveLog(mt, "Task received a revision request by "+ str(d) + ".")
+                comment.save()
+                return redirect('view_task', task_id)
+    
+        form = CommentForm()
+        comments = Comment.objects.all().filter(mastertask=mt).order_by('date').reverse()
+        voted = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(owner=d))
+        v_app = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(vote=True))
+        v_den = len(Vote.objects.all().filter(task=t).filter(status=mt.status).filter(vote=False))
+        reopen = False
+        if mt.status == 1 and v_app > (len(mt.team.developer_set.all()) - 1) / 2:
+            mt.status = 2
+            mt.opened = datetime.now()
+            mt.save()
+            
+            subject = 'TPS:Notification || The task you created is now in open state.'
+
+            contentList = [
+                'Your task called ' + t.title + ' is now in open state.',
+                'Description: ' + t.description,
+                'Priority: ' + t.getPriority(),
+                'Due date: ' + str(t.promised_date)
+            ]
+            
+            url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
+
+            html_message = render_to_string('tasks/email_template.html',           
+            {'title':'Your task is now in open state!','contentList': contentList, 'url':url, 'background_color': '#003399'})
+
+            plain_message = strip_tags(html_message)
+            from_email = 'no-reply@tps.info.tr'
+
+            send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
+            saveLog(mt, "All approved. Task is now in open state.")
+        elif mt.status == 3 and v_app > (len(mt.team.developer_set.all()) - 1) / 2:
+            mt.status = 5
+            mt.save()
+
+            subject = 'TPS:Notification || The task you created is now accepted.'
+            url = request._current_scheme_host + "/tasks/" + str(t.masterTask_id)
+
+            html_message = render_to_string('tasks/email_template.html',           
+            {'title':'Your task is accepted!', 'contentList': ['Your task called ' + t.title + ' is now accepted.'],'url':url, 'background_color': '#003399' })
+
+            plain_message = strip_tags(html_message)
+            from_email = 'no-reply@tps.info.tr'
+
+            send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
+            saveLog(mt, "All approved. Task is now accepted!")
+        elif mt.status == 3 and v_den >= (len(mt.team.developer_set.all()) - 1) / 2:
+            reopen = True 
+            
+        try:
+            liked = Like.objects.get(owner = d, mastertask = mt).liked
+        except ObjectDoesNotExist:
+            liked = None 
+
+        logs = MasterTaskLog.objects.all().filter(mastertask=mt).filter(gizli=False).order_by('tarih').reverse()
+
+        context = {
+            'page_title': 'View Task',
+            'mastertask': mt,
+            'task': t, 
+            'tp': mt.difficulty * t.priority,
+            'form': form,
+            'voted': voted,
+            'mytask': mt.owner == d,
+            'v_app': v_app,
+            'v_den': v_den,
+            'reopen': reopen, 
+            'liked': liked, 
+            'comments': comments,
+            'logs' : logs
+        }
+        return render(request, "tasks/task_view.html", context)
+    else : 
+        return redirect('team_view', d.team.all()[0].pk)
 
 
 @login_required
@@ -328,7 +528,46 @@ def tpslogout(request):
     return redirect('index')
 
 @login_required
+def profile (request):
+    return render(request, 'tasks/profile.html', {'page_title': 'Profile'})
+
+
+@login_required
+def my_details (request):
+    u = request.user
+    try:
+        d: Developer = Developer.objects.get(user=u)
+        if request.method == 'POST':
+            form = PhotoURLChangeForm(request.POST)
+            if form.is_valid():
+                dnew = form.save(commit=False)
+                dnew.pk = d.pk
+                dnew.user = d.user
+                dnew.save()
+                return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': dnew, 'form': form })
+            else:
+                return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': d, 'form': form })    
+        else:
+            form = PhotoURLChangeForm(instance = u, initial={"photoURL": d.photoURL}) 
+            return render(request, 'tasks/my_details.html', {'page_title': 'My Details', 'dev': d, 'form': form })
+    except ObjectDoesNotExist:
+        if request.method == 'POST':
+            form = PasswordChangeForm(request.user, data=request.POST)
+            if form.is_valid():
+                form.save()
+                update_session_auth_hash(request, form.user)
+                return render(request, 'tasks/password_success.html', {
+                    'page_title': 'Password changed.'
+                })
+        else:
+            form = PasswordChangeForm(request.user)
+            return render(request, 'tasks/profile_lecturer.html', {'form': form})        
+
+    
+@login_required
 def change_password(request):
+    u = request.user
+    d: Developer = Developer.objects.get(user=u)
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, data=request.POST)
         if form.is_valid():
@@ -340,16 +579,45 @@ def change_password(request):
         else:
             return render(
                 request,
-                'tasks/password.html',
+                'tasks/change_password.html',
                 {
                     'page_title': 'Change Password',
                     'form': form,
-                    'pass_error': 'Failed. Password not changed.'
+                    'pass_error': 'Failed. Password not changed.',
                 }
             ) 
     else:
         form = PasswordChangeForm(request.user)
-        return render(request, 'tasks/password.html', {'page_title': 'Change Password', 'form': form })
+        return render(request, 'tasks/change_password.html', {'page_title': 'Change Password', 'form': form, 'dev':d})
+
+
+@login_required
+def my_teams (request):
+    return render(request, 'tasks/my_teams.html', {'page_title': 'My Details' })
+ 
+@login_required
+def my_email (request):
+    u = request.user
+    d: Developer = Developer.objects.get(user=u)
+    if request.method == 'POST':
+        form = EmailChangeForm(request.POST)
+        if form.is_valid():
+            unew = form.save(commit=False)
+            unew.pk = u.pk
+            unew.first_name = u.first_name
+            unew.last_name = u.last_name
+            unew.username = u.username
+            unew.password = u.password
+            unew.save()
+            return render(request, 'tasks/my_email.html', { 'user': u, 'form': form, 'dev': d })
+    else:
+        form = EmailChangeForm(instance = u)
+        return render(request, 'tasks/my_email.html', {'user': u, 'form': form, 'dev': d})
+
+
+@login_required
+def my_notifications (request):
+    return render(request, 'tasks/my_notifications.html', {'page_title': 'My Details' })
 
 @login_required
 @permission_required('tasks.add_mastercourse')
@@ -378,66 +646,129 @@ def create_master_course(request):
 @permission_required('tasks.add_team')
 @permission_required('tasks.add_developer')
 def create_team(request, course_id):
+    c = Course.objects.get(pk = course_id)
+    lecturer = Lecturer.objects.get(user = request.user)
+    teams: Team([]) = Team.objects.all().filter(course = c)
+    
+    team_names = []
+    for t in teams:
+        team_names.append(t.name)
+        
+    team_no = len(teams) + 1
+    
     if request.method == 'POST':
-        from random import shuffle # only needed here... 
         stdlist = request.POST["stdlist"].split('\r\n')
-        shuffle(stdlist)
-
-        cid = int(request.POST["course_id"])
-        course = Course.objects.get(pk=cid)
-        lecturer = Lecturer.objects.get(user=request.user)
-
-        team_size = int(request.POST["team_size"])
-        team_no = 1
-        team_std_count = 0
-        teams = dict()
-        steams = list() 
+        
+        devs = []
         for std in stdlist:
-            team_name = "Team " + str(team_no)
-            if team_name not in teams:
-                teams[team_name] = list() 
-                team_std_count = 0
-                team = Team() 
-                team.course = course 
-                team.name = team_name 
-                team.github = "ENTER YOUR GIT REP ADDRESS HERE"
-                team.supervisor = lecturer 
-                team.save()
-                steams.append(team)
-            
             fields = std.split('\t')
             uniId = fields[1].strip()
-            fullname = fields[2].strip() + " " + fields[3].strip()
-            teams[team_name].append([uniId, fullname])
-            team_std_count += 1 
-            if team_std_count == team_size:
-                team_no += 1
+            fullname = fields[2].strip() + " " + fields[3].strip()    
+            u:User = User.objects.filter(username = uniId)
+            if not u.exists():
+                us = User.objects.create_user(uniId, None, uniId)
+                us.first_name = fields[2].strip()
+                us.last_name = fields[3].strip()
+                group = Group.objects.get(name="student")
+                us.groups.add(group)
+                us.save()
+                d = Developer()
+                d.user = us 
+                d.save()
             
-            # add to team 
-            user = User.objects.create_user(uniId, None, uniId)
-            user.first_name = fields[2].strip()
-            user.last_name = fields[3].strip()
-            group = Group.objects.get(name="student")
-            user.groups.add(group)
-            user.save()
-            d = Developer()
-            d.user = user 
-            d.save()
-            d.team.add(steams[-1])
-            d.save()
-        
-        return render(request, 'tasks/team_success.html', {
+            u:User = User(User.objects.get(username = uniId))
+            dev: Developer = Developer.objects.get(user = u.pk)
+            
+            t:Team = dev.team.all().filter(course = c)
+            if t.exists():
+                continue
+            else:
+                devs.append(dev)
+                
+        if 'auto' in request.POST:
+            from random import shuffle 
+            shuffle(devs)
+            
+            team_size = int(request.POST["team_size"])
+            team_std_count = 0
+            
+            for d in devs:
+                team_name = "Team" + " " + str(team_no)
+                if team_name not in team_names:
+                    t = Team()
+                    team_std_count = 0
+                    t.course = c
+                    t.name = team_name
+                    t.github = "ENTER YOUT GIT REP ADDRESS HERE"
+                    t.supervisor = lecturer
+                    t.save()
+                    team_names.append(team_name)
+                
+                team_std_count += 1
+                if team_std_count == team_size:
+                    team_no+=1
+                t: Team = Team.objects.all().get(name = team_name, course = c)
+                d.team.add(t)
+                d.save()
+            
+            teams: Team([]) = Team.objects.all().filter(course = c)
+            
+            t_d = {}
+            for t in teams:
+                devs: Developer([]) = list(Developer.objects.all().filter(team = t))
+                t_d[t.name] = []
+                for d in devs:
+                    t_d[t.name].append(d)
+            
+            return render(request, 'tasks/team_success.html', {
             'page_title': 'Results',
-            'teams': teams
-        })
-    else: 
-    # provide a text area for student names
-        course = Course.objects.get(pk=course_id)
+            't_d': t_d,
+            })    
+            
+        elif 'manuel' in request.POST:
+            if devs:
+                team_name = "Team" + " " + str(team_no)
+                t = Team()
+                t.course = c
+                t.name = team_name
+                t.github = "ENTER YOUT GIT REP ADDRESS HERE"
+                t.supervisor = lecturer
+                t.save()
+            for d in devs:
+                team: Team = Team.objects.all().get(name = team_name, course = c)
+                d.team.add(team)
+                d.save()
+            team_no+=1
+            
+            teams: Team([]) = Team.objects.all().filter(course = c)
+            t_d = {}
+            for t in teams:
+                devs: Developer([]) = list(Developer.objects.all().filter(team = t))
+                t_d[t.name] = []
+                for d in devs:
+                    t_d[t.name].append(d)
+            
+            return render(request, 'tasks/team_create.html', {
+             'page_title': 'Create Teams',
+             'course': c,
+             'team_no': team_no,
+             't_d': t_d
+            })
+    else:
+        teams: Team([]) = Team.objects.all().filter(course = c)
+        t_d = {}
+        for t in teams:
+            devs: Developer([]) = list(Developer.objects.all().filter(team = t))
+            t_d[t.name] = []
+            for d in devs:
+                t_d[t.name].append(d)
         return render(request, 'tasks/team_create.html', {
             'page_title': 'Create Teams',
-            'course': course
-        })
-    
+            'course': c,
+            'team_no': team_no,
+            't_d': t_d
+            })      
+            
 @login_required
 @permission_required('tasks.add_team')
 def lecturer_course_view(request, course_id):

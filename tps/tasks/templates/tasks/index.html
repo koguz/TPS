@@ -1,13 +1,40 @@
-{% extends "tasks/base.html" %}
-{% load static %}
-
+{% extends "tasks/base.html" %} {% load static %} {% block alert %} 
+    {% if not user.email%}
+        <div class="alert alert-danger" role="alert">
+            <p>You haven't entered an email for your account.
+                Please enter an email by clicking
+                <a href="{% url 'email'%}">here</a>
+            </p>
+        </div>
+    {% endif %}
+{% endblock %}
 
 {% block left_content %}
-<h4>{{ team }}</h4>
+
+<div style="width: 200px; margin-bottom: 20px; margin-top: 10px;">
+    <select style="border-radius: 12px;" onchange="window.location.href=this.value">
+        {% for t in teams %}
+            {% if t.pk == team.pk and t.course.get_current_milestone is not None %}            
+                <option selected value="{% url 'team_view' t.pk %}"> 
+                    {{t.course.masterCourse.code }} / {{t}}
+                </option> 
+            {% elif t.course.get_current_milestone is not None %}
+                <option value="{% url 'team_view' t.pk %}"> 
+                    {{t.course.masterCourse.code }} / {{t}}
+                </option> 
+            {% else %}
+                <option value="{% url 'team_view' t.pk %}" disabled> 
+                    {{t.course.masterCourse.code }} / {{t}}
+                </option> 
+            {% endif %} 
+        {% endfor %}
+    </select>
+</div>
 <p><i class="bi bi-github"></i> <a href="{{ team.github }}">Visit Team Git Repository</a></p>
-<p><i class="bi bi-pencil-square"></i> <a href="{% url "edit_team" %}">Edit Team Information</a></p>
+<p><i class="bi bi-pencil-square"></i> <a href="{% url "edit_team" team.pk %}">Edit Team Information</a></p>
 <hr>
 <h5>Team Points</h5>
+
 <p>
 {% for key, value in team.get_milestone_list.items %}
 {{ key }}: {{ value }} Points<br />
@@ -20,8 +47,8 @@
 {% for dev in devs %}
     <li>{{ dev }}
         <ul>
-        <li>Overall Project: {{ dev.get_project_grade }} Points</li>
-        {% for k, v in dev.get_milestone_list.items %}
+        <li>Overall Project: {{ project_grade }} Points</li>
+        {% for k, v in milestone_lists.items %}
             <li>{{ k }}: {{ v }} Points</li>
         {% endfor %}
         </ul>
@@ -37,7 +64,7 @@
         <h4>Tasks</h4>
     </div>
     <div class="col-sm" style="text-align: right;">
-        <a href="{% url 'create_task' %}"><button class="btn btn-primary">Create Task</button></a>
+        <a href="{% url 'create_task' team.pk %}"><button class="btn btn-primary">Create Task</button></a>
     </div>
 </div>
 <hr>
