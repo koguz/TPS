@@ -73,6 +73,13 @@ def team_view(request, team_id):
         milestone = t.course.get_current_milestone()
         mt = MasterTask.objects.all().filter(
             team=t).order_by('pk').reverse()[:10]
+        developers = dict()
+    
+        for d in devs :
+            developers[d] = list()
+            developers[d].append(d.get_project_grade(team_id))
+            developers[d].append(d.get_milestone_list(t.pk))
+        
         context = {
             'page_title': 'Team Home',
             'tasks': mt,
@@ -80,8 +87,7 @@ def team_view(request, team_id):
             'devs': devs,
             'milestone': milestone,
             'teams': teams,
-            'project_grade': d.get_project_grade(t.pk),
-            'milestone_lists': d.get_milestone_list(t.pk)
+            'developers': developers,
         }
         return render(request, 'tasks/index.html', context)
     else:
@@ -794,13 +800,21 @@ def lecturer_course_view(request, course_id):
 def lecturer_team_view(request, team_id):
     team = Team.objects.get(pk=team_id)
     devs = team.developer_set.all()
+    developers = dict()
+    
+    for d in devs :
+            developers[d] = list()
+            developers[d].append(d.get_project_grade(team_id))
+            developers[d].append(d.get_milestone_list(team.pk))
+        
     tasks = team.mastertask_set.all().order_by('pk').reverse()
     context = {
         'page_title': 'Lecturer Team View',
         'team': team,
         'course': team.course, 
         'devs': devs, 
-        'tasks': tasks 
+        'tasks': tasks,
+        'developers' : developers 
     }
 
     return render(request, 'tasks/lecturer_team_view.html', context)

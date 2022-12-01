@@ -15,11 +15,11 @@
 <h5>Developer Points</h5>
 <p>
 <ul>
-{% for dev in devs %}
+{% for dev, value in developers.items %}
     <li>{{ dev }}
         <ul>
-        <li>Overall Project: {{ dev.get_project_grade }} Points</li>
-        {% for k, v in dev.get_milestone_list.items %}
+        <li>Overall Project: {{ value.0 }} Points</li>
+        {% for k, v in value.1.items %}
             <li>{{ k }}: {{ v }} Points</li>
         {% endfor %}
         </ul>
@@ -56,7 +56,7 @@
             <td>{{task.milestone}}</td>
             <td>{{task.getStatus}}</td>
             {% if task.completed %}
-                <td>{{task.completed|timeuntil:task.created}}</td>
+                <td>{{task.completed|timeuntil:task.opened}}</td>
             {% else %}    
                 <td>-</td>
             {% endif %}

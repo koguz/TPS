@@ -50,7 +50,7 @@
             <td>{{task.milestone}}</td>
             <td>{{task.getStatus}}</td>
             {% if task.completed %}
-                <td>{{task.completed|timeuntil:task.created}}</td>
+                <td>{{task.completed|timeuntil:task.opened}}</td>
             {% else %}    
                 <td>-</td>
             {% endif %}
