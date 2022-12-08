@@ -139,9 +139,10 @@ def edit_task(request, task_id):
 
             plain_message = strip_tags(html_message)
             from_email = 'no-reply@tps.info.tr'
-
-            send_mail(subject, plain_message, from_email, receivers, html_message=html_message)
+            
             saveLog(mt, "Task is edited by " + str(d) + ".")
+            send_mail(subject, plain_message, from_email, receivers, html_message=html_message)
+            
 
             return redirect('view_task', task_id)
         else: 
@@ -199,9 +200,11 @@ def create_task(request, team_id):
 
             plain_message = strip_tags(html_message)
             from_email = 'no-reply@tps.info.tr'
-
-            send_mail(subject, plain_message, from_email, receivers, html_message=html_message)
+            
             saveLog(mastertask, "Task is created by " + str(d) + ".")
+            send_mail(subject, plain_message, from_email, receivers, html_message=html_message)
+            
+            
             return redirect('team_view', team_id)
         else:
             context={'page_title': 'Create New Task', 'form': form, 'milestone': milestone}
@@ -268,8 +271,9 @@ def complete_task(request, task_id):
         plain_message = strip_tags(html_message)
         from_email = 'no-reply@tps.info.tr'
 
-        send_mail(subject, plain_message, from_email, receivers, html_message=html_message)       
         saveLog(mt, "Task is completed by " + str(d) + ".")
+        send_mail(subject, plain_message, from_email, receivers, html_message=html_message)       
+        
         
         context = {
             'team': tm
@@ -388,9 +392,10 @@ def view_task(request, task_id):
 
                         plain_message = strip_tags(html_message)
                         from_email = 'no-reply@tps.info.tr'
-
-                        send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
                         saveLog(mt, "Task received an approve vote by "+ str(d) + ".")
+                        comment.save()
+                        send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
+                        
                     elif request.POST['approve'] == "No":
                         comment.approved = False
                         vote = Vote()
@@ -414,10 +419,11 @@ def view_task(request, task_id):
 
                         plain_message = strip_tags(html_message)
                         from_email = 'no-reply@tps.info.tr'
-
-                        send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
+                        
                         saveLog(mt, "Task received a revision request by "+ str(d) + ".")
-                comment.save()
+                        comment.save()
+                        send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
+                        
                 return redirect('view_task', task_id)
     
         form = CommentForm()
@@ -448,8 +454,9 @@ def view_task(request, task_id):
             plain_message = strip_tags(html_message)
             from_email = 'no-reply@tps.info.tr'
 
-            send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
             saveLog(mt, "All approved. Task is now in open state.")
+            send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
+            
         elif mt.status == 3 and v_app > (len(mt.team.developer_set.all()) - 1) / 2:
             mt.status = 5
             mt.save()
@@ -462,9 +469,10 @@ def view_task(request, task_id):
 
             plain_message = strip_tags(html_message)
             from_email = 'no-reply@tps.info.tr'
-
-            send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
+            
             saveLog(mt, "All approved. Task is now accepted!")
+            send_mail(subject, plain_message, from_email, [task_owner.user.email], html_message=html_message)
+            
         elif mt.status == 3 and v_den >= (len(mt.team.developer_set.all()) - 1) / 2:
             reopen = True 
             
