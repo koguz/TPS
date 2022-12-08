@@ -11,24 +11,11 @@
       display: table;
       clear: both;
     }
-    .text {
-      font-style: normal;
-      font-weight: 600;
-      font-size: 18px;
-      line-height: 22px;
-      text-align: start;
-      margin-bottom: 20px;
-      margin-left: 10px;
-      color: #656565;
-    }
   </style>
-  
      <div>
+      <h3 style="font-weight: 600; font-size: 22px; font-style: italic;">NOTIFICATIONS</h3><hr>
       <div style="margin-top: 10px">
         <div class="row">
-          <div class="column">
-            <p class="text">Prefered Email:</p>
-          </div>
           <div>
             <form action="{% url 'email' %}" method="post">
               {% csrf_token %}
