@@ -84,7 +84,17 @@
                 <td>{{mtask.owner}}</td>
                 <td><a href="{% url 'view_task' mtask.pk %}">{{mtask}}</a></td>
                 <td>{{mtask.milestone}}</td>
-                <td class="{% if mtask.status == 1 %}table-warning {% elif mtask.status == 2 %}table-primary{% elif mtask.status == 3 %}table-info{% elif mtask.states == 4 %}table-danger{% elif mtask.status == 5 %}table-success{%endif%}">{{mtask.getStatus}}</td>
+                <td class="{% if mtask.status == 1 %}
+                    table-warning 
+                {% elif mtask.status == 2 %}
+                    table-primary
+                {% elif mtask.status == 3 %}
+                    table-info
+                {% elif mtask.status == 4 %}
+                    table-danger
+                {% elif mtask.status == 5 %}
+                    table-success
+                {%endif%}">{{mtask.getStatus}}</td>
             </tr>
         {% endfor %}
         </tbody>
