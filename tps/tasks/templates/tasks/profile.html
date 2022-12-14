@@ -1,5 +1,6 @@
 {% extends "tasks/base.html" %} {% load static %} {% block breadcrumbs %}
 
+
 <h1
   style="
     font-weight: 600;
@@ -7,8 +8,8 @@
     margin-top: 10px;
     margin-bottom: 20px;
     font-style: italic;
-  "
->
+  ">
+
   Settings
 </h1>
 
@@ -44,6 +45,7 @@
     width: 120px;
     height: 120px;
     border-radius: 50%;
+    
   }
   .modal {
     padding-top: 10%; /* Location of the box */
@@ -55,21 +57,26 @@
     background-color: rgba(233, 233, 233, 0.103); /* Black w/ opacity */
   }
 
+
   .cont {
+
     width: 135px;
     height: 150px;
     display: block;
     position: relative;
   }
 
+
   .out {
     width: 100% !important;
     height: 100% !important;
     max-width: 120px !important; /* any size */
     max-height: 120px !important; /* any size */
+
     border-radius: 100%;
     position: relative;
   }
+
 
   .in {
     background-color: white;
@@ -78,6 +85,7 @@
     height: 50px;
     border-radius: 100%;
     position: absolute;
+
     bottom: 15px;
     right: 15px;
   }
@@ -125,12 +133,17 @@
     margin-top: 5px;
     margin-bottom: 40px;
   }
+
 </style>
+
+
+
 <div>
   <div class="cont">
     <div class="out">
     <image src="{{dev.photoURL}}" class="avatar" data-target="#Modal4" data-toggle="modal"/></a>
     </div>
+
     <div class="middle noselect">
       <div style="font-weight:600; font-style: italic; color: #55504e;"  data-target="#Modal4" data-toggle="modal">Edit</div>
     </div>
@@ -139,7 +152,6 @@
     </div>
   </div>
     <hr class="line">
-
   <div class="modal" id="Modal4" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -150,7 +162,6 @@
           </button>
         </div>
         <div class="modal-body">
-
               <div class="line" style="margin-top: 10px;">
                 <form action="{% url 'my_details' %}" method="post">
                   {% csrf_token %}
@@ -175,7 +186,6 @@
                   </table>
                 </form>
               </div>
-
         </div>
     </div>
   </div>

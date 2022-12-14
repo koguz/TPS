@@ -14,6 +14,7 @@
   </style>
      <div>
       <h3 style="font-weight: 600; font-size: 22px; font-style: italic;">NOTIFICATIONS</h3><hr>
+
       <div style="margin-top: 10px">
         <div class="row">
           <div>
@@ -21,6 +22,7 @@
               {% csrf_token %}
               <table width="100%">
                   {{ form }}
+              
               <tr>
                   <td>&nbsp;</td>
                   <td><input style="margin-top: 10px ;width: 100px; float:right; background-color: #FF5721; border-width: 0px;" type="submit" value="Save" class="btn btn-primary"></td></tr>
