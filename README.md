@@ -1,5 +1,4 @@
-# tps
-TPS forked
+# Task Point System
 
 Make sure you create an environment so that your local python environment stays safe. 
 
@@ -12,7 +11,4 @@ source env/bin/activate
 Then install django and any other required library:
 
 pip install django
-
-
-
 
