@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-z-t^6m!qh8=lbw6la(sdvy!#wmeausu_5w&h-x1rq(6u8yup3q'
+# SECRET_KEY = ''
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -128,9 +128,9 @@ STATIC_URL = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-EMAIL_HOST = 'rd-merlin.panel-giris.com'
+EMAIL_HOST = 'imap'
 EMAIL_PORT = 465
 EMAIL_HOST_USER = 'no-reply@tps.info.tr'
-EMAIL_HOST_PASSWORD = 'fGPhcCy&OS)w?;Gp'
+EMAIL_HOST_PASSWORD = 'pass'
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
